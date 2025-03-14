@@ -1,0 +1,30 @@
+name = "PluckArtifact"
+uuid = "bd3ab88f-9656-4eeb-9a4f-9025c9d141cb"
+authors = ["Alex Lew <alexlew@mit.edu>", "Maddy Bowers <mlbowers@mit.edu>"]
+version = "0.1.0"
+
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CUDD = "345a2cc7-28d8-58b2-abdf-cff77ea7d7f1"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Dice = "94eeadfc-1ba6-40b7-9ed8-dee71557d525"
+PProf = "e4faabce-9ead-11e9-39d9-4379958e3056"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+VTP = "86be7f31-a170-45b4-80a2-1900336dac47"
+
+[sources]
+Dice = {rev = "pluck-artifact", url = "https://github.com/mlb2251/Dice.jl.git"}
+VTP = {rev = "main", url = "https://github.com/alex-lew/coarse-to-fine-synthesis.git"}
+
+
+[compat]
+BenchmarkTools = "1.6.0"
+CUDD = "0.3.0"
+DataStructures = "0.18.20"
+Dice = "0.1.0"
+PProf = "3.2.0"
+Printf = "1.11.0"
+Profile = "1.11.0"
+Revise = "3.7.2"
