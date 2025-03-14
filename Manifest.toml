@@ -2571,7 +2571,7 @@ version = "0.2.0"
 
 [[deps.VTP]]
 deps = ["AutoHashEquals", "Dates", "FunctionalCollections", "JSON", "LibGit2", "Libdl"]
-path = ".."
+path = "coarse-to-fine-synthesis"
 uuid = "86be7f31-a170-45b4-80a2-1900336dac47"
 version = "0.1.0"
 
