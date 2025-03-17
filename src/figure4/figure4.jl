@@ -1,6 +1,7 @@
+using StatsBase
 
 include("figure4_pcfg.jl")
-
+include("figure4_sorted_fuel.jl")
 
 function figure4()
     println("Running Experiments for Figure 4...")
@@ -165,7 +166,9 @@ function expected_times(task)
         )
     elseif task == "pcfg"
         Dict{String,Vector{Float64}}(
-
+            "Dice.jl" => [0.000418666, 0.00038733299999999996, 0.000538625, 0.00054725, 0.00091025, 0.000909709, 0.004948708, 0.01241025, 0.013393625, 0.03382075, 3.307854, 8.794447708, 15.189399709, 36.444958625, 36.844978583, 84.148723291],
+            "Ours" => [0.0015934159999999998, 0.003292542, 0.005490917, 0.00584, 0.008906750000000001, 0.011212833, 0.016706375000000002, 0.019702165999999997, 0.020600916, 0.021367333, 0.055981292, 0.125570291, 0.15626325, 0.224890959, 0.276792125, 0.297152625, 0.449084333, 0.543065083, 0.32479874999999997, 0.5989294589999999],
+            "Enum" => [0.001234292, 0.003345459, 0.005707792000000001, 0.00665725, 0.010292958000000001, 0.013910458, 0.019574583, 0.024315874999999997, 0.027816542, 0.030437417, 0.08973025, 0.159174792, 0.231440291, 0.29252691700000005, 0.418486959, 0.48418483300000004, 0.67984175, 0.742398292, 0.6898698329999999, 1.001836416]
         )
     else
         error("Invalid task: $task")
@@ -197,7 +200,7 @@ function make_benchmark(task, method, size; idx=nothing)
         if method == "Ours" || method == "Enum" || method == "Ours (SMC)"
             return PluckBenchmark(generate_sorted_list_test(input_list); pre=sorted_defs)
         elseif method == "Dice.jl"
-            return DiceBenchmark(() -> pr(lists_equal(gen_sorted_list(length(input_list)+1, Nat.Z(), 6), make_list(input_list))))
+            return DiceBenchmark(() -> pr(lists_equal(gen_sorted_list(length(input_list) + 1, Nat.Z(), 6), make_list(input_list))))
         end
     elseif task == "pcfg"
         @assert idx !== nothing "idx is required for pcfg"
@@ -210,7 +213,7 @@ function make_benchmark(task, method, size; idx=nothing)
             input = replace(input, :a => :aa, :b => :bb, :c => :cc)
             fuel = get_dice_inputs_pcfg()[:fuels][idx]
             @assert length(input) == size "input length ($size) does not match size ($size)"
-            return DiceBenchmark(() -> pcfg_example(input, fuel, size+1))
+            return DiceBenchmark(() -> pcfg_example(input, fuel, size + 1))
         end
     else
         error("Invalid task: $task")
