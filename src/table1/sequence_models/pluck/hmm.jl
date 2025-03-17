@@ -13,9 +13,17 @@ function hmm_defs()
                                             Cons xhd xtl => (and (constructors_equal xhd yhd) (rec xtl ytl))))))
   """
 
+  @define "prefix_equals_smc?" """
+  (Y (λ rec xs ys -> 
+    (case ys of Nil => (FinallyTrue) | 
+        Cons yhd ytl => (case xs of Nil => (FinallyFalse) | 
+              Cons xhd xtl => (if (constructors_equal xhd yhd) (Suspend (rec xtl ytl)) (FinallyFalse))))))
+  """
+
   @define "generate_observations" "(Y (λ rec n -> (case n of O => (Nil) | S => (λ npred -> (Cons (True) (rec npred))))))"
 
   @define "hmm_example" "(λ n -> (prefix_equals? (hmm (False)) (generate_observations n)))"
+  @define "hmm_example_smc" "(λ n -> (prefix_equals_smc? (hmm (False)) (generate_observations n)))"
 end
 
 add_benchmark!("hmm", "pluck_default", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs))

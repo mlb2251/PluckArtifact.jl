@@ -68,6 +68,8 @@ function run_benchmark(benchmark::PluckBenchmark, strategy)
 
     fn_to_time = if strategy == "ours"
         benchmark.normalize ? () -> bdd_normalize(bdd_forward(expr)) : () -> bdd_forward(expr)
+    elseif strategy == "smc"
+        benchmark.normalize ? () -> bdd_normalize(bdd_forward_with_suspension(expr)) : () -> bdd_forward_with_suspension(expr)
     elseif strategy == "lazy_enum"
         benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr)) : () -> lazy_enumerate(expr)
     elseif strategy == "eager_enum"

@@ -55,8 +55,10 @@ end
 
 # generate_sorted_list(n) = "(nat_lists_equal (generate_sorted_list (O)) $(make_long_sorted_list(n)))"
 
-generate_sorted_list_test(l) = "(nat_lists_equal (generate_sorted_list (O)) $(make_list_from_julia_list(l)))"
+generate_sorted_list_test(l; equality = "nat_lists_equal") = "($equality (generate_sorted_list (O)) $(make_list_from_julia_list(l)))"
 generate_sorted_list_test_fuel(l, fuel, fuel_num) = "(nat_lists_equal (generate_sorted_list_fuel $fuel $fuel_num (O)) $(make_list_from_julia_list(l)))"
+
+
 
 l = [0, 3, 7, 12, 13, 15, 16, 20, 21, 25][1:8]
 sorted_list_query() = generate_sorted_list_test(l)

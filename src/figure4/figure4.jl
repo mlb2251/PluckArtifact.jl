@@ -94,7 +94,7 @@ function make_scaling_plot(sizes::Dict{String,Vector{Int}}, times; title="No tit
 
 end
 
-strategy_of_method = Dict("Dice.jl" => "dice", "Ours" => "ours", "Enum" => "lazy_enum")
+strategy_of_method = Dict("Dice.jl" => "dice", "Ours" => "ours", "Enum" => "lazy_enum", "Ours (SMC)" => "smc")
 
 
 function get_input_sizes(task)
@@ -189,25 +189,33 @@ function make_benchmark(task, method, size; idx=nothing)
             return DiceBenchmark(() -> pr(iterate_ladder(true, false, size)))
         end
     elseif task == "hmm"
-        if method == "Ours" || method == "Enum" || method == "Ours (SMC)"
+        if method == "Ours" || method == "Enum"
             return PluckBenchmark("(hmm_example $size)"; pre=hmm_defs)
+        elseif method == "Ours (SMC)"
+            return PluckBenchmark("(hmm_example_smc $size)"; pre=hmm_defs)
         elseif method == "Dice.jl"
             return DiceBenchmark(() -> dice_hmm_example(size))
         end
     elseif task == "sorted"
         full_list = [0, 3, 7, 12, 13, 15, 16, 20, 21, 25, 29, 30, 36, 40, 44, 48, 50, 51, 55, 56, 57, 62, 64, 68, 70, 71, 75, 77, 78:150...]
         input_list = full_list[1:size]
-        if method == "Ours" || method == "Enum" || method == "Ours (SMC)"
+        if method == "Ours" || method == "Enum"
             return PluckBenchmark(generate_sorted_list_test(input_list); pre=sorted_defs)
+        elseif method == "Ours (SMC)"
+            return PluckBenchmark(generate_sorted_list_test(input_list; equality="(suspended_list_eq nats_equal)"); pre=sorted_defs)
         elseif method == "Dice.jl"
             return DiceBenchmark(() -> pr(lists_equal(gen_sorted_list(length(input_list) + 1, Nat.Z(), 6), make_list(input_list))))
         end
     elseif task == "pcfg"
         @assert idx !== nothing "idx is required for pcfg"
-        if method == "Ours" || method == "Enum" || method == "Ours (SMC)"
+        if method == "Ours" || method == "Enum"
             input = get_ours_inputs_pcfg()[:inputs][idx]
             @assert length(input) == size "input length ($size) does not match size ($size)"
             return PluckBenchmark("(list_symbols_equal (generate_pcfg_grammar (SS)) $(make_string_from_julia_list(input)))"; pre=pcfg_defs)
+        elseif method == "Ours (SMC)"
+            input = get_ours_inputs_pcfg()[:inputs][idx]
+            @assert length(input) == size "input length ($size) does not match size ($size)"
+            return PluckBenchmark("(suspended_list_eq symbol_equals (generate_pcfg_grammar (SS)) $(make_string_from_julia_list(input)))"; pre=pcfg_defs)
         elseif method == "Dice.jl"
             input = get_dice_inputs_pcfg()[:inputs][idx]
             input = replace(input, :a => :aa, :b => :bb, :c => :cc)
@@ -226,11 +234,11 @@ function methods_of_task(task)
     elseif task == "ladder"
         return ["Dice.jl", "Ours", "Enum"]
     elseif task == "hmm"
-        return ["Dice.jl", "Ours", "Enum"] # TODO add SMC
+        return ["Dice.jl", "Ours", "Enum", "Ours (SMC)"]
     elseif task == "sorted"
-        return ["Dice.jl", "Ours", "Enum"] # TODO add SMC
+        return ["Dice.jl", "Ours", "Enum", "Ours (SMC)"]
     elseif task == "pcfg"
-        return ["Dice.jl", "Ours", "Enum"] # TODO add SMC
+        return ["Dice.jl", "Ours", "Enum", "Ours (SMC)"]
     else
         error("Invalid task: $task")
     end
