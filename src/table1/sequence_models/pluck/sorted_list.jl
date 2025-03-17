@@ -55,14 +55,6 @@ end
 
 # generate_sorted_list(n) = "(nat_lists_equal (generate_sorted_list (O)) $(make_long_sorted_list(n)))"
 
-function make_list_from_julia_list(l)
-  if isempty(l)
-      return "(Nil)"
-  else
-      return "(Cons $(l[1]) $(make_list_from_julia_list(l[2:end])))"
-  end
-end
-
 generate_sorted_list_test(l) = "(nat_lists_equal (generate_sorted_list (O)) $(make_list_from_julia_list(l)))"
 generate_sorted_list_test_fuel(l, fuel, fuel_num) = "(nat_lists_equal (generate_sorted_list_fuel $fuel $fuel_num (O)) $(make_list_from_julia_list(l)))"
 

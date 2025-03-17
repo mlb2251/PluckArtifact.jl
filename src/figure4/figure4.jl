@@ -107,6 +107,8 @@ function get_input_sizes(task)
             "Ours (SMC)" => our_sizes,
             "Enum" => enum_sizes
         )
+    elseif task == "sorted"
+        Dict("Enum" => collect(1:101), "Dice.jl" => collect(1:9), "Ours" => collect(1:101), "Ours (SMC)" => collect(1:101))
     else
         error("Invalid task: $task")
     end
@@ -131,6 +133,10 @@ function expected_times(task)
             "Ours" => [0.000595041, 0.0010889580000000001, 0.001731458, 0.002469291, 0.003566417, 0.004566792, 0.006335291, 0.007614, 0.00968025, 0.011866541, 0.014243083, 0.016469459, 0.020083375, 0.025082542, 0.028004124999999998, 0.032479334, 0.035258166, 0.045686208, 0.054218458, 0.061112291, 0.28840641699999997, 0.484022958, 0.680832125, 0.952601083, 1.3734514999999998, 1.744533375, 2.203066042, 3.0153116669999998, 3.439089542, 4.013321042],
             "Enum" => [0.003298584, 0.178954417, 8.709622167, 18.786668042000002, 40.4584215] # 86.964305, 182.200289542
         )
+    elseif task == "sorted"
+        Dict{String,Vector{Float64}}(
+            
+        )
     else
         error("Invalid task: $task")
     end
@@ -150,12 +156,18 @@ function make_benchmark(task, method, size)
             return DiceBenchmark(() -> pr(iterate_ladder(true, false, size)))
         end
     elseif task == "hmm"
-        if method == "Ours" || method == "Enum"
+        if method == "Ours" || method == "Enum" || method == "Ours (SMC)"
             return PluckBenchmark("(hmm_example $size)"; pre=hmm_defs)
         elseif method == "Dice.jl"
             return DiceBenchmark(() -> dice_hmm_example(size))
-        elseif method == "Ours (SMC)"
-            error("todo") # TODO add SMC
+        end
+    elseif task == "sorted"
+        full_list = [0, 3, 7, 12, 13, 15, 16, 20, 21, 25, 29, 30, 36, 40, 44, 48, 50, 51, 55, 56, 57, 62, 64, 68, 70, 71, 75, 77, 78:150...]
+        input_list = full_list[1:size]
+        if method == "Ours" || method == "Enum" || method == "Ours (SMC)"
+            return PluckBenchmark(generate_sorted_list_test(input_list); pre=sorted_defs)
+        elseif method == "Dice.jl"
+            return DiceBenchmark(() -> pr(lists_equal(gen_sorted_list(length(input_list)+1, Nat.Z(), 6), make_list(input_list))))
         end
     else
         error("Invalid task: $task")
@@ -168,6 +180,8 @@ function methods_of_task(task)
     elseif task == "ladder"
         return ["Dice.jl", "Ours", "Enum"]
     elseif task == "hmm"
+        return ["Dice.jl", "Ours", "Enum"] # TODO add SMC
+    elseif task == "sorted"
         return ["Dice.jl", "Ours", "Enum"] # TODO add SMC
     else
         error("Invalid task: $task")
@@ -196,6 +210,13 @@ function plot_settings(task)
             xlabel="Chain Length",
             xlims=(10^1, 10^3),
             ylims=(10^-3, 10^2)
+        )
+    elseif task == "sorted"
+        return (
+            title="Sorted List Generation",
+            xlabel="List Length",
+            xlims=(10^0, 10^2),
+            ylims=(10^-4, 10^2)
         )
     else
         error("Invalid task: $task")
