@@ -2570,7 +2570,7 @@ uuid = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 version = "0.2.0"
 
 [[deps.VTP]]
-deps = ["AutoHashEquals", "Dates", "FunctionalCollections", "JSON", "LibGit2", "Libdl"]
+deps = ["AutoHashEquals", "Dates", "FunctionalCollections", "JSON", "LibGit2", "Libdl", "Printf", "Revise"]
 path = "coarse-to-fine-synthesis"
 uuid = "86be7f31-a170-45b4-80a2-1900336dac47"
 version = "0.1.0"

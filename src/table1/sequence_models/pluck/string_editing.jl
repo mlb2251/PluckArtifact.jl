@@ -83,7 +83,6 @@ function perturb_defs()
   """
 
 
-  # note during artifact construction: this is the one we evaluated against
   @define "perturb" """
   (Y (λ perturb s -> 
       (case s of 
@@ -96,6 +95,23 @@ function perturb_defs()
           (if do_delete
               perturbed_cs
               (append insertion (Cons c perturbed_cs)) 
+              )))))
+  """
+
+
+  # note during artifact construction: this is the one we're using
+  @define "perturb" """
+  (Y (λ perturb s -> 
+      (case s of 
+        Nil => (random_string 0.99) 
+        Cons c cs => 
+        (let 
+          (do_delete (flip 0.01) 
+           insertion (random_string 0.99)
+           perturbed_cs (perturb cs))
+          (if do_delete
+              perturbed_cs
+              (append insertion (Cons (if (flip 0.01) random_char c) perturbed_cs)) 
               )))))
   """
 

@@ -1,4 +1,4 @@
 [submodule "coarse-to-fine-synthesis"]
 	path = coarse-to-fine-synthesis
 	url = https://github.com/alex-lew/coarse-to-fine-synthesis.git
-	branch = 118c801
+	branch = main
