@@ -1,4 +1,7 @@
 
+include("figure4_pcfg.jl")
+
+
 function figure4()
     println("Running Experiments for Figure 4...")
 end
@@ -63,8 +66,20 @@ function make_scaling_plot(sizes::Dict{String,Vector{Int}}, times; title="No tit
         )
     for key in ["Enum", "Dice.jl", "Ours (SMC)", "Ours"]
         if haskey(times, key) && haskey(sizes, key)
+            # average times for identical sizes
+            unique_sizes = unique(sizes[key])
+            averaged_times = times[key]
+            if length(unique_sizes) != length(sizes[key])
+                averaged_times = []
+                for size in unique_sizes
+                    indices = findall(x -> x == size, sizes[key])
+                    push!(averaged_times, StatsBase.mean(times[key][indices]))
+                end
+            end
+
+            # plot
             plot!([], color=colors[key], label=key, linewidth=2)
-            plot!(my_plot, sizes[key], times[key], label=nothing, linewidth=6, color=colors[key])
+            plot!(my_plot, unique_sizes, averaged_times, label=nothing, linewidth=6, color=colors[key])
         else
             println("Warning: $key not found in times or sizes")
         end
@@ -109,6 +124,15 @@ function get_input_sizes(task)
         )
     elseif task == "sorted"
         Dict("Enum" => collect(1:101), "Dice.jl" => collect(1:9), "Ours" => collect(1:101), "Ours (SMC)" => collect(1:101))
+    elseif task == "pcfg"
+        ours_sizes = get_ours_inputs_pcfg()[:input_sizes]
+        dice_sizes = get_dice_inputs_pcfg()[:input_sizes]
+        Dict(
+            "Ours" => ours_sizes,
+            "Dice.jl" => dice_sizes,
+            "Enum" => ours_sizes,
+            "Ours (SMC)" => ours_sizes
+        )
     else
         error("Invalid task: $task")
     end
@@ -137,12 +161,16 @@ function expected_times(task)
         Dict{String,Vector{Float64}}(
             
         )
+    elseif task == "pcfg"
+        Dict{String,Vector{Float64}}(
+
+        )
     else
         error("Invalid task: $task")
     end
 end
 
-function make_benchmark(task, method, size)
+function make_benchmark(task, method, size; idx=nothing)
     if task == "diamond"
         if method == "Ours" || method == "Enum"
             return PluckBenchmark("(diamond_network $size)"; pre=diamond_defs)
@@ -169,6 +197,19 @@ function make_benchmark(task, method, size)
         elseif method == "Dice.jl"
             return DiceBenchmark(() -> pr(lists_equal(gen_sorted_list(length(input_list)+1, Nat.Z(), 6), make_list(input_list))))
         end
+    elseif task == "pcfg"
+        @assert idx !== nothing "idx is required for pcfg"
+        if method == "Ours" || method == "Enum" || method == "Ours (SMC)"
+            input = get_ours_inputs_pcfg()[:inputs][idx]
+            @assert length(input) == size "input length ($size) does not match size ($size)"
+            return PluckBenchmark("(list_symbols_equal (generate_pcfg_grammar (SS)) $(make_string_from_julia_list(input)))"; pre=pcfg_defs)
+        elseif method == "Dice.jl"
+            input = get_dice_inputs_pcfg()[:inputs][idx]
+            input = replace(input, :a => :aa, :b => :bb, :c => :cc)
+            fuel = get_dice_inputs_pcfg()[:fuels][idx]
+            @assert length(input) == size "input length ($size) does not match size ($size)"
+            return DiceBenchmark(() -> pcfg_example(input, fuel, size+1))
+        end
     else
         error("Invalid task: $task")
     end
@@ -182,6 +223,8 @@ function methods_of_task(task)
     elseif task == "hmm"
         return ["Dice.jl", "Ours", "Enum"] # TODO add SMC
     elseif task == "sorted"
+        return ["Dice.jl", "Ours", "Enum"] # TODO add SMC
+    elseif task == "pcfg"
         return ["Dice.jl", "Ours", "Enum"] # TODO add SMC
     else
         error("Invalid task: $task")
@@ -231,7 +274,7 @@ function run_scaling(task, methods=methods_of_task(task))
         printstyled("running ", length(input_sizes), " benchmarks for $method\n", color=:yellow)
         for (i, size) in enumerate(input_sizes)
             println("size=$size ($(percent_progress(i, input_sizes))%)")
-            benchmark = make_benchmark(task, method, size)
+            benchmark = make_benchmark(task, method, size; idx=i)
             _, timing = run_benchmark(benchmark, strategy_of_method[method])
             push!(method_times, timing / 1000)
         end
