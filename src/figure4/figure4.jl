@@ -89,9 +89,12 @@ function make_scaling_plot(sizes::Dict{String,Vector{Int}}, times; title="No tit
     # Replace spaces and special characters with underscores for safe filename
     safe_filename = replace(title, r"[^a-zA-Z0-9]" => "_")
     mkpath("out/plots")
-    savefig(my_plot, "out/plots/$(safe_filename)_scaling_plot.pdf")
+    path = "out/plots/$(safe_filename)_scaling_plot.pdf"
+    savefig(my_plot, path)
+    println("wrote ", path)
+    savefig(my_plot, path[1:end-4] * ".png")
+    println("wrote ", path[1:end-4] * ".png")
     return my_plot
-
 end
 
 strategy_of_method = Dict("Dice.jl" => "dice", "Ours" => "ours", "Enum" => "lazy_enum", "Ours (SMC)" => "smc")
