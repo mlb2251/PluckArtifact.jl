@@ -2,3 +2,8 @@
 	path = Pluck.jl
 	url = https://github.com/alex-lew/coarse-to-fine-synthesis.git
 	branch = main-maddy
+
+[submodule "PluckSynthesis.jl"]
+	path = PluckSynthesis.jl
+	url = https://github.com/alex-lew/coarse-to-fine-synthesis.git
+	branch = dots
