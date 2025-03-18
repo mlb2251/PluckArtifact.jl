@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     procps \
+    time \
     && rm -rf /var/lib/apt/lists/*
 
 USER root
