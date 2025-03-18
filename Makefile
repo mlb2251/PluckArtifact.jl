@@ -4,9 +4,9 @@ start: bindings patch
 bindings:
 	cd PluckSynthesis.jl && make bindings
 
-submodule:
-	git submodule sync --recursive
-	git submodule update --init --recursive
+julia-instantiate:
+	julia --project -e 'using Pkg; Pkg.resolve(); Pkg.instantiate()'
+	cd PluckSynthesis.jl && make julia-instantiate
 
 patch:
 	echo "nothing to patch"
