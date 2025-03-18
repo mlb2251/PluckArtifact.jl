@@ -1,4 +1,4 @@
-[submodule "coarse-to-fine-synthesis"]
-	path = coarse-to-fine-synthesis
+[submodule "Pluck.jl"]
+	path = Pluck.jl
 	url = https://github.com/alex-lew/coarse-to-fine-synthesis.git
-	branch = main
+	branch = main-maddy
