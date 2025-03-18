@@ -2,7 +2,6 @@ start: bindings patch
 	julia --project
 
 bindings:
-	cd Pluck.jl && make bindings
 	cd PluckSynthesis.jl && make bindings
 
 submodule:
