@@ -504,7 +504,7 @@ function run_example(l1, l2; old_implementation=false, record_json=false)
   if old_implementation
     constrain("(perturb $l1_string)", [], to_value(l2), EvalState(; eval_limit=1000000, record_json=record_json))
   else
-    VTP.bdd_forward("""(nat_lists_eq 
+    bdd_forward("""(nat_lists_eq 
   (perturb $l1_string)
            $l2_string
 )

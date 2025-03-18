@@ -18,7 +18,7 @@ VTP = "86be7f31-a170-45b4-80a2-1900336dac47"
 
 [sources]
 Dice = {rev = "pluck-artifact", url = "https://github.com/mlb2251/Dice.jl.git"}
-VTP = {path = "Pluck.jl"}
+VTP = {path = "PluckSynthesis.jl"}
 
 [compat]
 BenchmarkTools = "1.6.0"

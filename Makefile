@@ -1,9 +1,13 @@
-start: patch
-	free -h
+start:
 	julia --project
 
 bindings:
 	cd Pluck.jl && make bindings
+	cd PluckSynthesis.jl && make bindings
+
+submodule:
+	git submodule sync --recursive
+	git submodule update --init --recursive
 
 patch:
 	echo "nothing to patch"
