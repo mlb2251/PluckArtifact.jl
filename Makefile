@@ -1,4 +1,4 @@
-start:
+start: bindings patch
 	julia --project
 
 bindings:
@@ -16,4 +16,4 @@ docker-build:
 	docker build -t pluckartifact:latest .
 
 docker:
-	docker run -it -m 60g -v $(PWD):/PluckArtifact.jl pluckartifact:latest
+	docker run -it -m 60g -p 8000:8000 -v $(PWD):/PluckArtifact.jl pluckartifact:latest
