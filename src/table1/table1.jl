@@ -59,6 +59,7 @@ function evaluate_cell!(timings, strategy, baseline)
 
     # @assert !haskey(subtimings, baseline) "timing for $baseline already exists"
     println("evaluating: $strategy on $baseline")
+    println("MEM: $(mem_usage_mb()) MB")
     res, timing = isnothing(benchmark.run_benchmark) ? run_benchmark(benchmark, strategy) : benchmark.run_benchmark(benchmark, strategy)
     subtimings[baseline] = timing
     return res

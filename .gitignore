@@ -1,3 +1,5 @@
 data/large_bayes_nets/*.lisp
 data/large_bayes_nets/*.jl.ignore
-.vscode/settings.json
+.vscode/
+out/
+build.log
