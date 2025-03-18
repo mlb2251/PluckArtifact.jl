@@ -3,7 +3,7 @@ start: patch
 	julia --project
 
 bindings:
-	cd coarse-to-fine-synthesis && make bindings
+	cd Pluck.jl && make bindings
 
 patch:
 	echo "nothing to patch"
