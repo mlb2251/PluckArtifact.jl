@@ -3,3 +3,4 @@ data/large_bayes_nets/*.jl.ignore
 .vscode/
 out/
 build.log
+data_to_plot

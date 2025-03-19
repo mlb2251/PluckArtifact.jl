@@ -2,7 +2,7 @@
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "840305177860eb67d6e5d8eae262b22c7180910b"
+project_hash = "d37cc324b72ac0adbf1e6e085954b0339177fb63"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e2478490447631aedba0823d4d7a80b2cc8cdb32"
@@ -510,9 +510,9 @@ version = "1.9.1"
 
 [[deps.Dice]]
 deps = ["BenchmarkTools", "CUDD", "DataStructures", "DirectedAcyclicGraphs", "Distributions", "Graphs", "IRTools", "Jive", "Logging", "MacroTools", "Plots", "PrecompileTools", "SymPy", "SymbolicNumericIntegration", "Symbolics"]
-git-tree-sha1 = "a3e4fe9b38ec0aa5628ccd49462a3183e22d6c89"
-repo-rev = "pluck-artifact"
-repo-url = "https://github.com/mlb2251/Dice.jl.git"
+git-tree-sha1 = "18bd34295d5cd967abb4638082a0abcac0895e43"
+repo-rev = "synth"
+repo-url = "https://github.com/mlb2251/Dice.jl"
 uuid = "94eeadfc-1ba6-40b7-9ed8-dee71557d525"
 version = "0.1.0"
 
