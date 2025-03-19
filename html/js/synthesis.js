@@ -12,11 +12,6 @@ reload()
 function reload() {
     clear_svg()
     resize_svg()
-    // load bdd json
-    // load_by_paths(jsons => {
-    //     console.log(jsons)
-    //     show_results(jsons)
-    // })
     load_by_path(json => {
         console.log(json)
         let group = json.groups[url_params.get("group") || 0]
@@ -115,12 +110,7 @@ function show_results(json) {
                 init_stub.full_path = init_stub.out + "/" + init_stub.path
                 init_stub.flat_idx = promises.length
 
-                // let promise_fn = () => 
                 promises.push(load_json_with_retry(init_stub.stub_path))
-                // promises.push(load_json(init_stub.stub_path, j => j))
-                // promise_fn()
-                    // .catch(e => setTimeout(() => promise_fn(), 1000))
-                // )
             }
         }
     }
@@ -382,9 +372,6 @@ function show_results(json) {
         function kl(dtask, j, r, step, test = false) {
             assert(!dtask.task_info[test ? 'test_hit_limit' : 'train_hit_limit'])
             let strategy = test ? dtask.task_info.test_terminating_strategy : dtask.task_info.train_terminating_strategy
-            // console.log(strategy)
-            // console.log(dtask.task_info)
-            // console.log(test)
 
             let logPs = test ? dtask.task_info.res[strategy].test_res.ios_results.map(r => null_to_neginf(r.logweight)) : dtask.task_info.res[strategy].train_res.ios_results.map(r => null_to_neginf(r.logweight))
             let res_key = test ? 'test_res' : 'train_res'
@@ -457,9 +444,6 @@ function show_results(json) {
         console.log("no gt test hit limit:", no_gt_test_hit_limit.length / done_tasks.length * 100 + "%")
 
 
-
-
-
         {
             // build a cactus plot
             // - take the set of 100 tasks x 3 reps = 300 runs
@@ -472,12 +456,6 @@ function show_results(json) {
             // let slack_ll = Math.log(10)
 
             let slack_invperplexity = 0.9
-            // let slack_ll = Math.log(slack_ll_factor)
-
-
-            // let train_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_train_hit_limit, dtask => avg_over_reps_linear(r => ll_near_gt(dtask, j, r, step, false, slack_ll)))))
-            // let test_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_test_hit_limit, dtask => avg_over_reps_linear(r => ll_near_gt(dtask, j, r, step, true, slack_ll)))))
-
 
             let min_time = 0
             let max_time = 0
@@ -528,7 +506,6 @@ function show_results(json) {
                 }))
             }
 
-
             // Append a new SVG to the body
             let svg = d3.select("body").append("svg")
                 .attr("width", 800) // Adjust width as needed
@@ -549,22 +526,7 @@ function show_results(json) {
                 })
             }
 
-
-
-
         }
-
-
-
-
-
-
-
-
-
-
-
-
 
         let graph_spec = {
             x_label: "MCMC Steps",
@@ -583,14 +545,9 @@ function show_results(json) {
             }))
         }
 
-
         // plot invperplexity
         {
-            // let slack_ll_factor = 10
-            // let slack_ll = Math.log(slack_ll_factor)
             let train_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_train_hit_limit, dtask => avg_over_reps_linear(r => invperplexity(dtask, j, r, step, false)))))
-            let test_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_test_hit_limit, dtask => avg_over_reps_linear(r => invperplexity(dtask, j, r, step, true)))))
-
 
             let xs_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(done_tasks, dtask => avg_over_reps_linear(r => get_log_step(dtask, j, r, step).time))))
 
@@ -609,9 +566,6 @@ function show_results(json) {
 
             let cfg = json.config.perp2 || {}
 
-            // Create the graph using makeGraph
-            // copy the spec
-
             let spec = Object.assign({}, graph_spec)
             spec.g = svg.append("g");
             // spec.title = `E_tasks[E_reps[1/perplexity]]`
@@ -628,13 +582,6 @@ function show_results(json) {
 
             // move legend
             graph.legend.attr("transform", `translate(${cfg.legend_x || spec.width*.6}, ${cfg.legend_y || spec.height*.7})`)
-            // plot a horizontal line at gt invperplexity
-            // let gt_line = plot_curve(graph, {
-            //     xs: [0, last_step],
-            //     ys: [gtp, gtp],
-            //     color: "black",
-            //     styles: { "stroke-dasharray": "5,5" }
-            // })
             // plot a horizontal line at gt invperplexity no limit hit
             let gt_line_nonzero = plot_curve(graph, {
                 xs: [0, spec.xmax],
@@ -647,185 +594,18 @@ function show_results(json) {
                 .attr("transform", `translate(${spec.width-120}, ${graph.yScale(gtp_nonzero)-10})`)
                 .text("Ground Truth")
 
-
-
-
             for (let j = 0; j < jsons.length; j++) {
                 let curve = plot_curve(graph, {
                     xs: xs_series[j],
                     ys: train_series[j],
                     color: color_of_strategy[strategy_of_j[j]]
                 })
-
-                // let test_curve = plot_curve(graph, {
-                //     xs: xs_series[j],
-                //     ys: test_series[j],
-                //     color: color_of_strategy[strategy_of_j[j]],
-                //     styles: {
-                //         // "stroke-width": 3,
-                //         "stroke-dasharray": "5,3"
-                //     }
-                // })
             }
         }
 
 
 
-        // plot ll near gt
-        {
-            let slack_ll_factor = 10
-            let slack_ll = Math.log(slack_ll_factor)
-            let train_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_train_hit_limit, dtask => avg_over_reps_linear(r => ll_near_gt(dtask, j, r, step, false, slack_ll)))))
-            let test_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_test_hit_limit, dtask => avg_over_reps_linear(r => ll_near_gt(dtask, j, r, step, true, slack_ll)))))
-
-            // Append a new SVG to the body
-            let svg = d3.select("body").append("svg")
-                .attr("width", 800) // Adjust width as needed
-                .attr("height", 500); // Adjust height as needed
-
-            // Create the graph using makeGraph
-            // copy the spec
-            let spec = Object.assign({}, graph_spec)
-            spec.g = svg.append("g");
-            spec.title = `E_tasks[E_reps[L*/L < ${slack_ll_factor}]]`
-
-            let graph = makeGraph(spec);
-
-            for (let j = 0; j < jsons.length; j++) {
-                let curve = plot_curve(graph, {
-                    xs: log_steps,
-                    ys: train_series[j],
-                    color: color_of_strategy[strategy_of_j[j]]
-                })
-
-                let test_curve = plot_curve(graph, {
-                    xs: log_steps,
-                    ys: test_series[j],
-                    color: color_of_strategy[strategy_of_j[j]],
-                    styles: {
-                        // "stroke-width": 3,
-                        "stroke-dasharray": "5,3"
-                    }
-                })
-            }
-        }
-
-        // plot ll above other
-        {
-            let slack_ll_factor = 10
-            let slack_ll = Math.log(slack_ll_factor)
-            // note: only works for j=0 and j=1
-            // these can actually be over all done_tasks because we don't need the ground truths
-            let train_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(done_tasks, dtask => avg_over_reps_linear_allpairs((r1, r2) => ll_above_other(dtask, j, 1 - j, r1, r2, step, false, slack_ll)))))
-            // let train_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_train_hit_limit, dtask => avg_over_reps_linear(r => ll_above_other(dtask, j, 1-j, r, r, step, false, slack_ll)))))
-            let test_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(done_tasks, dtask => avg_over_reps_linear_allpairs((r1, r2) => ll_above_other(dtask, j, 1 - j, r1, r2, step, true, slack_ll)))))
-
-            // Append a new SVG to the body
-            let svg = d3.select("body").append("svg")
-                .attr("width", 800) // Adjust width as needed
-                .attr("height", 500); // Adjust height as needed
-
-            let spec = Object.assign({}, graph_spec)
-            spec.g = svg.append("g");
-            spec.title = `E_tasks[E_reps[L1/L2 > ${slack_ll_factor}]]`
-
-            // Create the graph using makeGraph
-            let graph = makeGraph(spec);
-
-            for (let j = 0; j < jsons.length; j++) {
-                let curve = plot_curve(graph, {
-                    xs: log_steps,
-                    ys: train_series[j],
-                    color: color_of_strategy[strategy_of_j[j]]
-                })
-
-                let test_curve = plot_curve(graph, {
-                    xs: log_steps,
-                    ys: test_series[j],
-                    color: color_of_strategy[strategy_of_j[j]],
-                    styles: {
-                        // "stroke-width": 3,
-                        "stroke-dasharray": "5,3"
-                    }
-                })
-            }
-        }
-
-        // plot kl less than slack
-        {
-            let slack_kl = 1
-            let train_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_train_hit_limit, dtask => avg_over_reps_linear(r => kl(dtask, j, r, step, false) < slack_kl))))
-            let test_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_test_hit_limit, dtask => avg_over_reps_linear(r => kl(dtask, j, r, step, true) < slack_kl))))
-
-            // Append a new SVG to the body
-            let svg = d3.select("body").append("svg")
-                .attr("width", 800) // Adjust width as needed
-                .attr("height", 500); // Adjust height as needed
-
-            let spec = Object.assign({}, graph_spec)
-            spec.g = svg.append("g");
-            spec.title = `E_tasks[E_reps[KL < ${slack_kl}]]`
-
-            // Create the graph using makeGraph
-            let graph = makeGraph(spec);
-
-            for (let j = 0; j < jsons.length; j++) {
-                let curve = plot_curve(graph, {
-                    xs: log_steps,
-                    ys: train_series[j],
-                    color: color_of_strategy[strategy_of_j[j]]
-                })
-
-                let test_curve = plot_curve(graph, {
-                    xs: log_steps,
-                    ys: test_series[j],
-                    color: color_of_strategy[strategy_of_j[j]],
-                    styles: {
-                        // "stroke-width": 3,
-                        "stroke-dasharray": "5,3"
-                    }
-                })
-            }
-        }
-
-        // plot kl less than other
-        {
-            let slack_kl = 0.1
-
-            // note: only works for j=0 and j=1
-            let train_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_train_hit_limit, dtask => avg_over_reps_linear_allpairs((r1, r2) => kl(dtask, j, r1, step, false) < kl(dtask, 1 - j, r2, step, false) - slack_kl))))
-            let test_series = count(jsons.length).map(j => log_steps.map(step => avg_over_tasks_linear(no_gt_test_hit_limit, dtask => avg_over_reps_linear_allpairs((r1, r2) => kl(dtask, j, r1, step, true) < kl(dtask, 1 - j, r2, step, true) - slack_kl))))
-
-            // Append a new SVG to the body
-            let svg = d3.select("body").append("svg")
-                .attr("width", 800) // Adjust width as needed
-                .attr("height", 500); // Adjust height as needed
-
-            let spec = Object.assign({}, graph_spec)
-            spec.g = svg.append("g");
-            spec.title = `E_tasks[E_reps[KL1 < KL2 by at least ${slack_kl}]]`
-
-            // Create the graph using makeGraph
-            let graph = makeGraph(spec);
-
-            for (let j = 0; j < jsons.length; j++) {
-                let curve = plot_curve(graph, {
-                    xs: log_steps,
-                    ys: train_series[j],
-                    color: color_of_strategy[strategy_of_j[j]]
-                })
-
-                let test_curve = plot_curve(graph, {
-                    xs: log_steps,
-                    ys: test_series[j],
-                    color: color_of_strategy[strategy_of_j[j]],
-                    styles: {
-                        // "stroke-width": 3,
-                        "stroke-dasharray": "5,3"
-                    }
-                })
-            }
-        }
+        
 
     })
 }
