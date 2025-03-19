@@ -9,11 +9,9 @@ using BenchmarkTools
 using Printf
 using Profile
 using PProf
-using VTP
+using Pluck
 using Dice # for baseline
 
-include("utils.jl")
-include("figure4/figure4.jl")
 include("figure5/figure5.jl")
 
 function artifact()
