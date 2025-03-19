@@ -546,7 +546,7 @@ function show_results(json) {
             spec.ymin = cfg.ymin || 0.15
             // spec.ymax = .6
             spec.ymax = cfg.ymax || gtp_nonzero * 1.1
-            spec.xmax = cfg.xmax || 120
+            spec.xmax = cfg.xmax || jsons.map((json, j) => xs_series[j][xs_series[j].length-1]).reduce((a, b) => Math.max(a, b), 0) + 5
             spec.yticks = cfg.yticks || undefined
 
             let graph = makeGraph(spec);
