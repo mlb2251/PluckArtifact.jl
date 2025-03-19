@@ -17,10 +17,10 @@ macro bbtime(args...)
             local $trialmean = $BenchmarkTools.mean($trial)
             local $trialallocs = $BenchmarkTools.allocs($trialmin)
             println(
-                "  min=",
+                "  time=",
                 $BenchmarkTools.time($trialmin)/1e6, " ms",
-                " mean=",
-                $BenchmarkTools.time($trialmean)/1e6, " ms",
+                # " mean=",
+                # $BenchmarkTools.time($trialmean)/1e6, " ms",
                 " (",
                 $trialallocs,
                 " allocation",

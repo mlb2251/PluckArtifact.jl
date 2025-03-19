@@ -6,7 +6,7 @@ function run_fuel_plot()
     min_correct_fuel = 6
 
     println("Running Ours")
-    res, ours_query_time = run_benchmark(PluckBenchmark(generate_sorted_list_test(l); pre=sorted_defs), "ours")
+    res, ours_query_time = run_benchmark(PluckBenchmark(generate_sorted_list_test(l); pre=sorted_defs), "ours"; fast=true)
     ours_query_time /= 1000
     println("Res: $res")
 
@@ -15,7 +15,7 @@ function run_fuel_plot()
     for (i, fuel) in enumerate(fuel_vals)
         println("Fuel: $fuel ($(percent_progress(i, length(fuel_vals)))%)")
         benchmark = DiceBenchmark(() -> pr(lists_equal(gen_sorted_list(length(l) + 1, Nat.Z(), fuel), make_list(l))))
-        res, timing = run_benchmark(benchmark, "dice")
+        res, timing = run_benchmark(benchmark, "dice"; fast=true)
         println("Res: $res")
         push!(timings, timing / 1000)
     end
@@ -26,8 +26,15 @@ function run_fuel_plot()
         :timings => timings,
         :min_correct_fuel => min_correct_fuel
     )
-    println("$result")
-    return result
+
+    path = "data_to_plot/figure4/fuel.json"
+    mkpath(dirname(path))
+    open(path, "w") do f
+        JSON.print(f, result, 2)
+    end
+    println("Wrote $path")
+
+    return nothing
 end
 
 function expected_fuel_results()
@@ -39,11 +46,18 @@ function expected_fuel_results()
     )
 end
 
+function make_fuel_plot()
+    results = open("data_to_plot/figure4/fuel.json", "r") do f
+        JSON.parse(f)
+    end
+    make_fuel_plot(results)
+end
+
 function make_fuel_plot(results)
-    fuel_vals = results[:fuel_vals]
-    ours_query_time = results[:ours_query_time]
-    timings = results[:timings]
-    min_correct_fuel = results[:min_correct_fuel]
+    fuel_vals = results["fuel_vals"]
+    ours_query_time = results["ours_query_time"]
+    timings = results["timings"]
+    min_correct_fuel = results["min_correct_fuel"]
 
     sorted_list_plot = plot([], margin=20Plots.px, fontsize=18, label=nothing, legendfontsize=18, labelfontsize=18, linewidth=1, titlefontsize=18, tickfontsize=18, xlabel="Fuel", ylabel="Time (s)", legend=:topleft, title="Sorted List Generation")
     plot!(sorted_list_plot, [], color=:green, label="Ours", linewidth=2)

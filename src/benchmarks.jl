@@ -61,7 +61,7 @@ function get_benchmark(baseline::String, strategy::String)
 end
 
 
-function run_benchmark(benchmark::PluckBenchmark, strategy)
+function run_benchmark(benchmark::PluckBenchmark, strategy; fast=false)
     benchmark.pre !== nothing && benchmark.pre()
     benchmark.query = isnothing(benchmark.make_query) ? benchmark.query : benchmark.make_query()
     expr = parse_expr(benchmark.query)
@@ -79,12 +79,24 @@ function run_benchmark(benchmark::PluckBenchmark, strategy)
         error("Unknown strategy: $strategy")
     end
 
-    res, timing = @bbtime $fn_to_time()
-    return res, timing
+    return do_timing(fn_to_time; fast=fast)
 end
 
-function run_benchmark(benchmark::DiceBenchmark, strategy)
+function run_benchmark(benchmark::DiceBenchmark, strategy; fast=false)
     @assert strategy == "dice"
-    res, timing = @bbtime $benchmark.fn_to_time()
+    return do_timing(benchmark.fn_to_time; fast=fast)
+end
+
+function do_timing(fn_to_time; fast=false)
+    if fast
+        timing1 = (@elapsed (res = fn_to_time())) * 1000;
+        if timing1 > 20000
+            return res, timing1 # don't run the second time if it's already > 20s
+        end
+        GC.gc();
+        timing = (@elapsed fn_to_time()) * 1000
+    else
+        res, timing = @bbtime $fn_to_time()
+    end
     return res, timing
 end

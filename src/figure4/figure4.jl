@@ -1,4 +1,5 @@
 using StatsBase
+using JSON
 
 include("figure4_pcfg.jl")
 include("figure4_sorted_fuel.jl")
@@ -82,7 +83,7 @@ function make_scaling_plot(sizes::Dict{String,Vector{Int}}, times; title="No tit
             plot!([], color=colors[key], label=key, linewidth=2)
             plot!(my_plot, unique_sizes, averaged_times, label=nothing, linewidth=6, color=colors[key])
         else
-            println("Warning: $key not found in times or sizes")
+            # println("Warning: $key not found in times or sizes")
         end
     end
 
@@ -301,20 +302,35 @@ function run_scaling(task, methods=methods_of_task(task))
         for (i, size) in enumerate(input_sizes)
             println("size=$size ($(percent_progress(i, input_sizes))%)")
             benchmark = make_benchmark(task, method, size; idx=i)
-            _, timing = run_benchmark(benchmark, strategy_of_method[method])
+            _, timing = run_benchmark(benchmark, strategy_of_method[method]; fast=true)
             push!(method_times, timing / 1000)
         end
         all_times[method] = method_times
-        println("Times so far for $task:")
-        println(all_times)
+        # println("Times so far for $task:")
+        # println(all_times)
     end
-    return all_times
+
+    path = "data_to_plot/figure4/$(task).json"
+    mkpath(dirname(path))
+    open(path, "w") do f
+        JSON.print(f, all_times, 2)
+    end
+    println("Wrote $path")
+    nothing
 end
 
 percent_progress(i::Int, total::Int) = round(Int, 100 * i / total)
 percent_progress(i::Int, total::Vector) = percent_progress(i, length(total))
 
-function plot_scaling(task; sizes=get_input_sizes(task), times=expected_times(task))
+function plot_scaling(task; sizes=get_input_sizes(task))
+    path = "data_to_plot/figure4/$(task).json"
+    times = open(path, "r") do f
+        JSON.parse(f)
+    end
+    plot_scaling(task, times; sizes=sizes)
+end
+
+function plot_scaling(task, times; sizes=get_input_sizes(task))
     settings = plot_settings(task)
     make_scaling_plot(sizes, times; settings...)
 end
