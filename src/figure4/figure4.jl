@@ -19,7 +19,7 @@ using Plots
 
 
 # times::Dict{String, Vector{Float64}}
-function make_scaling_plot(sizes::Dict{String,Vector{Int}}, times; title="No title", xlabel="No label", xlims=nothing, ylims=nothing, legend=nothing)
+function make_scaling_plot(task, sizes::Dict{String,Vector{Int}}, times; title="No title", xlabel="No label", xlims=nothing, ylims=nothing, legend=nothing)
     for key in keys(sizes)
         @assert key in ["Dice.jl", "Ours", "Enum", "Ours (SMC)"] "Invalid key: $key"
     end
@@ -90,7 +90,7 @@ function make_scaling_plot(sizes::Dict{String,Vector{Int}}, times; title="No tit
     # Replace spaces and special characters with underscores for safe filename
     safe_filename = replace(title, r"[^a-zA-Z0-9]" => "_")
     mkpath("out/plots")
-    path = "out/plots/$(safe_filename)_scaling_plot.pdf"
+    path = "out/plots/figure-4-$(task).pdf"
     savefig(my_plot, path)
     println("wrote ", path)
     savefig(my_plot, path[1:end-4] * ".png")
@@ -332,5 +332,5 @@ end
 
 function plot_scaling(task, times; sizes=get_input_sizes(task))
     settings = plot_settings(task)
-    make_scaling_plot(sizes, times; settings...)
+    make_scaling_plot(task, sizes, times; settings...)
 end

@@ -91,10 +91,12 @@ function do_timing(fn_to_time; fast=false)
     if fast
         timing1 = (@elapsed (res = fn_to_time())) * 1000;
         if timing1 > 20000
+            println("Time: $(timing1/1000) s")
             return res, timing1 # don't run the second time if it's already > 20s
         end
         GC.gc();
         timing = (@elapsed fn_to_time()) * 1000
+        println("Time: $(timing/1000) s")
     else
         res, timing = @bbtime $fn_to_time()
     end

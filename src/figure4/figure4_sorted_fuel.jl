@@ -70,7 +70,10 @@ function make_fuel_plot(results)
     plot!(sorted_list_plot, fuel_vals[min_correct_fuel_idx:end], 1 .* timings[min_correct_fuel_idx:end], label=nothing, line=:solid, linewidth=6, color=:black)
     plot!(sorted_list_plot, grid=false)
 
-    savefig(sorted_list_plot, "sorted_list_fuel_plot.pdf")
-    return sorted_list_plot
+    savefig(sorted_list_plot, "out/plots/figure-4-fuel.pdf")
+    savefig(sorted_list_plot, "out/plots/figure-4-fuel.png")
+    println("Wrote out/plots/figure-4-fuel.pdf")
+    println("Wrote out/plots/figure-4-fuel.png")
+    nothing
 end
 
