@@ -1,5 +1,9 @@
+# TABLE 1
+
 table-1:
 	julia --project -e "using PluckArtifact; PA.table1()"
+
+# FIGURE 4
 
 figure-4: figure-4-diamond figure-4-ladder figure-4-hmm figure-4-sorted figure-4-pcfg figure-4-fuel
 
@@ -28,8 +32,7 @@ figure-4-fuel:
 	julia --project -e "using PluckArtifact; PA.make_fuel_plot()"
 
 
-start: bindings
-	julia --project
+# BASICS
 
 bindings:
 	cd Pluck.jl && make bindings
