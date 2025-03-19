@@ -258,7 +258,7 @@ function plot_settings(task)
             title="Network Reachability (Diamond)",
             xlabel="Network Size",
             xlims=(10^1, 10^3),
-            ylims=(10^-3, 10^1)
+            ylims=(10^-4, 10^1)
         )
     elseif task == "ladder"
         return (

@@ -52,8 +52,15 @@ function evaluate_cell!(timings, strategy, baseline)
     end
 
     if benchmark.skip
+        @assert !benchmark.timeout "can't be both skip and timeout"
         printstyled("skipping $strategy on $baseline\n"; color=:yellow)
         subtimings[baseline] = "skipped"
+        return nothing
+    end
+
+    if benchmark.timeout
+        printstyled("skipping $strategy on $baseline\n"; color=:yellow)
+        subtimings[baseline] = "timeout"
         return nothing
     end
 

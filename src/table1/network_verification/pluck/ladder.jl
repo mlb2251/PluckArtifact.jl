@@ -17,5 +17,5 @@ function ladder_defs()
 end
 
 add_benchmark!("ladder", "pluck_default", PluckBenchmark("(run_ladder_network 100)"; pre=ladder_defs))
-add_benchmark!("ladder", "pluck_strict_enum", PluckBenchmark("(run_ladder_network 100)"; pre=ladder_defs, skip=true))
-add_benchmark!("ladder", "pluck_lazy_enum", PluckBenchmark("(run_ladder_network 100)"; pre=ladder_defs, skip=true))
+add_benchmark!("ladder", "pluck_strict_enum", PluckBenchmark("(run_ladder_network 100)"; pre=ladder_defs, timeout=true))
+add_benchmark!("ladder", "pluck_lazy_enum", PluckBenchmark("(run_ladder_network 100)"; pre=ladder_defs, timeout=true))

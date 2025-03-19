@@ -27,6 +27,6 @@ function hmm_defs()
 end
 
 add_benchmark!("hmm", "pluck_default", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs))
-add_benchmark!("hmm", "pluck_strict_enum", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs, skip=true))
-add_benchmark!("hmm", "pluck_lazy_enum", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs, skip=true))
+add_benchmark!("hmm", "pluck_strict_enum", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs, timeout=true))
+add_benchmark!("hmm", "pluck_lazy_enum", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs, timeout=true))
 

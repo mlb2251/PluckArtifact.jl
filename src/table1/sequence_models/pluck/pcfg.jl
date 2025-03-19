@@ -121,4 +121,4 @@ function run_pcfg_lazy(; fuel = nothing, kwargs...)
 end
 
 add_benchmark!("pcfg", "pluck_default", PluckBenchmark(pcfg_query(); pre=pcfg_defs))
-add_benchmark!("pcfg", "pluck_strict_enum", PluckBenchmark(pcfg_query(); pre=pcfg_defs, skip=true))
+add_benchmark!("pcfg", "pluck_strict_enum", PluckBenchmark(pcfg_query(); pre=pcfg_defs, timeout=true))

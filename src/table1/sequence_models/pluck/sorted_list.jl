@@ -84,4 +84,4 @@ end
 
 
 add_benchmark!("sorted_list", "pluck_default", PluckBenchmark(sorted_list_query(); pre=sorted_defs))
-add_benchmark!("sorted_list", "pluck_strict_enum", PluckBenchmark(sorted_list_query(); pre=sorted_defs, skip=true))
+add_benchmark!("sorted_list", "pluck_strict_enum", PluckBenchmark(sorted_list_query(); pre=sorted_defs, timeout=true))

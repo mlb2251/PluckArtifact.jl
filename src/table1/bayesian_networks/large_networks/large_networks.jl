@@ -208,10 +208,10 @@ end
 for name in names
     make_query = () -> setup_large_net_pluck(name)
     add_benchmark!(name, "pluck_default", PluckBenchmark(""; make_query = make_query))
-    skip_strict_enum = !(name in ["cancer", "survey"])
-    add_benchmark!(name, "pluck_strict_enum", PluckBenchmark(""; make_query = make_query, skip=skip_strict_enum))
-    skip_lazy_enum = !(name in ["cancer", "survey", "water"])
-    add_benchmark!(name, "pluck_lazy_enum", PluckBenchmark(""; make_query = make_query, skip=skip_lazy_enum))
+    timeout_strict_enum = !(name in ["cancer", "survey"])
+    add_benchmark!(name, "pluck_strict_enum", PluckBenchmark(""; make_query = make_query, timeout=timeout_strict_enum))
+    timeout_lazy_enum = !(name in ["cancer", "survey", "water"])
+    add_benchmark!(name, "pluck_lazy_enum", PluckBenchmark(""; make_query = make_query, timeout=timeout_lazy_enum))
 end
 
 for name in names

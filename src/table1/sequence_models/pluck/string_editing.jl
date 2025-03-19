@@ -560,4 +560,4 @@ string_editing_query() = "(strings_eq (perturb $(julia_string_to_expression(long
 
 add_benchmark!("string_editing", "pluck_default", PluckBenchmark(string_editing_query(); pre=perturb_defs))
 add_benchmark!("string_editing", "pluck_lazy_enum", PluckBenchmark(string_editing_query(); pre=perturb_defs, skip=true))
-add_benchmark!("string_editing", "pluck_strict_enum", PluckBenchmark(string_editing_query(); pre=perturb_defs, skip=true))
+add_benchmark!("string_editing", "pluck_strict_enum", PluckBenchmark(string_editing_query(); pre=perturb_defs, timeout=true))

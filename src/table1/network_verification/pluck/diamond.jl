@@ -18,5 +18,5 @@ function diamond_defs()
 end
 
 add_benchmark!("diamond", "pluck_default", PluckBenchmark("(diamond_network 100)"; pre=diamond_defs))
-add_benchmark!("diamond", "pluck_strict_enum", PluckBenchmark("(diamond_network 100)"; pre=diamond_defs, skip=true))
-add_benchmark!("diamond", "pluck_lazy_enum", PluckBenchmark("(diamond_network 100)"; pre=diamond_defs, skip=true))
+add_benchmark!("diamond", "pluck_strict_enum", PluckBenchmark("(diamond_network 100)"; pre=diamond_defs, timeout=true))
+add_benchmark!("diamond", "pluck_lazy_enum", PluckBenchmark("(diamond_network 100)"; pre=diamond_defs, timeout=true))

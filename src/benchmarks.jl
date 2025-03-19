@@ -7,8 +7,9 @@ mutable struct PluckBenchmark
     run_benchmark::Union{Function, Nothing}
     make_query::Union{Function, Nothing}
     skip::Bool
+    timeout::Bool
     kwargs::Dict{Symbol, Any}
-    PluckBenchmark(query; normalize=false, pre=nothing, run_benchmark=nothing, make_query=nothing, skip=false, kwargs=Dict()) = new(query, normalize, pre, run_benchmark, make_query, skip, kwargs)
+    PluckBenchmark(query; normalize=false, pre=nothing, run_benchmark=nothing, make_query=nothing, skip=false, timeout=false, kwargs=Dict()) = new(query, normalize, pre, run_benchmark, make_query, skip, timeout, kwargs)
 end
 
 mutable struct DiceBenchmark
@@ -16,7 +17,8 @@ mutable struct DiceBenchmark
     run_benchmark::Union{Function, Nothing}
     kwargs::Dict{Symbol, Any}
     skip::Bool
-    DiceBenchmark(fn_to_time; run_benchmark=nothing, kwargs=Dict(), skip=false) = new(fn_to_time, run_benchmark, kwargs, skip)
+    timeout::Bool
+    DiceBenchmark(fn_to_time; run_benchmark=nothing, kwargs=Dict(), skip=false, timeout=false) = new(fn_to_time, run_benchmark, kwargs, skip, timeout)
 end
 
 const all_groups = ["pluck_default", "dice_default", "pluck_lazy_enum", "pluck_strict_enum"]
