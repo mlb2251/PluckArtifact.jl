@@ -1,5 +1,3 @@
-table-1:
-	julia --project -e "using PluckArtifact; PA.table1()"
 
 # FIGURE 5 LEFT
 
