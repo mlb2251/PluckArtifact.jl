@@ -3,7 +3,11 @@ table-1:
 
 # FIGURE 5 LEFT
 
-figure-5-left: figure-5-left-dice figure-5-left-bdd figure-5-left-lazy figure-5-left-smc
+figure-5-left: figure-5-left-dice figure-5-left-bdd figure-5-left-lazy figure-5-left-smc figure-5-left-show
+
+figure-5-left-show:
+	julia --project -e "using PluckArtifact; PA.build_figure5_left()"
+
 
 figure-5-left-dice:
 	julia --project -t8 -e "using PluckArtifact; PA.figure5_left_single(:dice)"
@@ -20,10 +24,10 @@ figure-5-left-smc:
 
 # FIGURE 5 RIGHT
 
+figure-5-right: figure-5-right-dice figure-5-right-bdd figure-5-right-lazy figure-5-right-smc figure-5-right-show
+
 figure-5-right-show:
 	julia --project -e "using PluckArtifact; PA.build_figure5_right()"
-
-figure-5-right: figure-5-right-dice figure-5-right-bdd figure-5-right-lazy figure-5-right-smc figure-5-right-show
 
 figure-5-right-dice:
 	julia --project -t8 -e "using PluckArtifact; PA.figure5_right_single(:dice)"
