@@ -44,5 +44,5 @@ bindings:
 	cd PluckSynthesis.jl && make bindings
 
 julia-instantiate:
-	julia --project -e 'using Pkg; Pkg.resolve(); Pkg.instantiate()'
+	julia --project -e 'using Pkg; Pkg.instantiate()'
 	cd PluckSynthesis.jl && make julia-instantiate
