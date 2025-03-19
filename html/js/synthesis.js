@@ -210,34 +210,14 @@ function show_results(json) {
             tinfo.others_got_neginf = !tinfo.train_hit_limit && tinfo.res[tinfo.train_terminating_strategy].train_res.logweight == -Infinity
         }
 
-        console.log("only smc terminated:", done_tasks.filter(dtask => dtask.task_info.only_smc_terminated).length / done_tasks.length * 100 + "%")
-        console.log("smc didnt terminate but others did:", done_tasks.filter(dtask => dtask.task_info.smc_didnt_terminate_but_others_did).length / done_tasks.length * 100 + "%")
-        console.log("smc and others terminated:", done_tasks.filter(dtask => dtask.task_info.smc_and_others_terminated).length / done_tasks.length * 100 + "%")
-        console.log("nobody terminated:", done_tasks.filter(dtask => dtask.task_info.nobody_terminated).length / done_tasks.length * 100 + "%")
-        console.log("smc got neginf:", done_tasks.filter(dtask => dtask.task_info.smc_got_neginf).length / done_tasks.length * 100 + "%")
-        console.log("others got neginf:", done_tasks.filter(dtask => dtask.task_info.others_got_neginf).length / done_tasks.length * 100 + "%")
-        console.log("smc got neginf and others didnt:", done_tasks.filter(dtask => dtask.task_info.smc_got_neginf && !dtask.task_info.others_got_neginf).length / done_tasks.length * 100 + "%")
-        console.log("others got neginf and smc didnt:", done_tasks.filter(dtask => dtask.task_info.others_got_neginf && !dtask.task_info.smc_got_neginf).length / done_tasks.length * 100 + "%")
-
-        console.log(done_tasks.filter(dtask => dtask.task_info.smc_got_neginf && !dtask.task_info.others_got_neginf))
-        console.log("smc and others terminated and different ll:", done_tasks.filter(dtask => dtask.task_info.smc_and_others_terminated && Math.abs(dtask.task_info.res.smc.train_res.logweight - dtask.task_info.res[dtask.task_info.train_terminating_strategy].train_res.logweight) > 0.01 ).length / done_tasks.length * 100 + "%")
-        console.log("smc terminated and others didnt and smc got non-neginf:", done_tasks.filter(dtask => dtask.task_info.only_smc_terminated && !dtask.task_info.smc_got_neginf).length / done_tasks.length * 100 + "%")
-
-
         let subset = done_tasks.filter(dtask => dtask.task_info.smc_and_others_terminated)
             // .filter(dtask => !dtask.task_info.smc_got_neginf)
 
         let relative_mse = subset
-            // .filter(dtask => dtask.task_info.smc_and_others_terminated)
-            // .filter(dtask => !dtask.task_info.smc_got_neginf)
             .map(dtask => {
                 let smc_res = dtask.task_info.res.smc.train_res
                 let other_res = dtask.task_info.res[dtask.task_info.train_terminating_strategy].train_res
-                // return Math.abs(smc_res.logweight - other_res.logweight)
                 return (Math.exp(smc_res.logweight - other_res.logweight) - 1) ** 2
-                // return ((Math.exp(smc_res.logweight) - Math.exp(other_res.logweight))/ Math.exp(other_res.logweight)) ** 2
-                // return (Math.exp(smc_res.logweight) - Math.exp(other_res.logweight)) ** 2
-                // return smc_res.ios_results.map((io_res, i) => (Math.exp(io_res.logweight - other_res.ios_results[i].logweight)-1) ** 2).reduce((a, b) => a + b, 0) / smc_res.ios_results.length
             }).reduce((a, b) => a + b, 0) / subset.length
         console.log("relative mse:", relative_mse)
 
@@ -256,7 +236,6 @@ function show_results(json) {
         let relative_mse_simple = subset
             .map(dtask => {
                 let ll = dtask.task_info.res[dtask.task_info.train_terminating_strategy].train_res.logweight
-                // console.log(ll)
                 return Math.exp((2 * Math.log1p(-Math.exp(ll))) - ll)
             }).reduce((a, b) => a + b, 0) / subset.length
         console.log("relative_mse_simple:", relative_mse_simple)
@@ -265,16 +244,9 @@ function show_results(json) {
         relative_mse_simple = subset
             .map(dtask => {
                 let ll = dtask.task_info.res[dtask.task_info.train_terminating_strategy].train_res.logweight
-                // console.log(ll)
                 return (2 * Math.log1p(-Math.exp(ll))) - ll
             }).reduce((a, b) => logaddexp(a, b), 0) - Math.log(subset.length)
         console.log("relative_mse_simple:", relative_mse_simple)
-
-
-
-        console.log("train limit hit:", done_tasks.filter(dtask => dtask.task_info.train_hit_limit).length / done_tasks.length * 100 + "%")
-        console.log("test limit hit:", done_tasks.filter(dtask => dtask.task_info.test_hit_limit).length / done_tasks.length * 100 + "%")
-        console.log("either limit hit:", done_tasks.filter(dtask => dtask.task_info.train_hit_limit || dtask.task_info.test_hit_limit).length / done_tasks.length * 100 + "%")
 
         function get_final_stub(dtask, j, r) {
             return jsons[j].init_stubs_of_task[dtask.t][r].final_stub
@@ -293,7 +265,7 @@ function show_results(json) {
             if (log_step === undefined) {
                 // only time it should be missing is if early stopping happened bc we found a deterministic solution.
                 // In that case, just use the final step
-                assert(mcmc_result.state_log.length < log_steps.length)
+                assert(mcmc_result.state_log.length <= log_steps.length)
                 assert(mcmc_result.state_log[mcmc_result.state_log.length - 1].step < step)
                 log_step = mcmc_result.state_log[mcmc_result.state_log.length - 1]
             }
@@ -320,7 +292,6 @@ function show_results(json) {
         }
 
         function gt_invperplexity(dtask, test = false) {
-            // assert(!dtask.task_info[test ? 'test_hit_limit' : 'train_hit_limit'])
             if (dtask.task_info[test ? 'test_hit_limit' : 'train_hit_limit'])
                 return 0.
             let strategy = test ? dtask.task_info.test_terminating_strategy : dtask.task_info.train_terminating_strategy
