@@ -13,8 +13,6 @@ using VTP
 using Dice # for baseline
 
 include("utils.jl")
-include("benchmarks.jl")
-include("table1/table1.jl")
 include("figure4/figure4.jl")
 include("figure5/figure5.jl")
 
