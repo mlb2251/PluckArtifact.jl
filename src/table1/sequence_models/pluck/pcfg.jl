@@ -4,7 +4,7 @@
 
 function pcfg_defs()
 
-    VTP.define_type!(:pcfg_grammar_symbol, Dict(:SS => Symbol[], :XX => Symbol[], :YY => Symbol[], :a => Symbol[], :b => Symbol[], :c => Symbol[]))
+    Pluck.define_type!(:pcfg_grammar_symbol, Dict(:SS => Symbol[], :XX => Symbol[], :YY => Symbol[], :a => Symbol[], :b => Symbol[], :c => Symbol[]))
 
     @define "generate_pcfg_grammar" """
     (Y (λ generate symbol -> 
@@ -103,7 +103,7 @@ end
 pcfg_example_long(n) = "(list_symbols_equal (generate_dice_grammar (Start)) $(make_long_observation_string(n)))"
 pcfg_example_long_fuel(n, fuel) = "(list_symbols_equal (generate_dice_grammar_fuel $fuel (Start)) $(make_long_observation_string(n)))"
 
-# VTP.bdd_forward("(list_symbols_equal (generate_dice_grammar (Start)) (Cons (a) (Cons (b) (Cons (c) (Nil)))))")
+# Pluck.bdd_forward("(list_symbols_equal (generate_dice_grammar (Start)) (Cons (a) (Cons (b) (Cons (c) (Nil)))))")
 
 
 function run_pcfg_bdd()

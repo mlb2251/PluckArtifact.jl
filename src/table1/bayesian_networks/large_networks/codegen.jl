@@ -119,7 +119,7 @@ function parse_bif(filename::String)
             if !haskey(domain_to_type, domain)
                 type_name = name  # Use first variable name as type name
                 domain_to_type[domain] = type_name
-                VTP.define_type!(type_name, Dict(val => Symbol[] for val in domain))
+                Pluck.define_type!(type_name, Dict(val => Symbol[] for val in domain))
             end
         end
 

@@ -2,7 +2,7 @@
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "17f5af32a42f182929f52bf60c90d87ab8954ef4"
+project_hash = "2fd223e1db4af7749123787f5e72573e29142f76"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e2478490447631aedba0823d4d7a80b2cc8cdb32"
@@ -1830,6 +1830,12 @@ version = "1.40.10"
     ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
+[[deps.Pluck]]
+deps = ["AutoHashEquals", "Dates", "FunctionalCollections", "JSON", "LibGit2", "Libdl", "Printf", "Revise"]
+path = "Pluck.jl"
+uuid = "86be7f31-a170-45b4-80a2-1900336dac47"
+version = "0.1.0"
+
 [[deps.PoissonRandom]]
 deps = ["Random"]
 git-tree-sha1 = "a0f1159c33f846aa77c3f30ebbc69795e5327152"
@@ -2568,12 +2574,6 @@ version = "0.3.0"
 git-tree-sha1 = "ca0969166a028236229f63514992fc073799bb78"
 uuid = "41fe7b60-77ed-43a1-b4f0-825fd5a5650d"
 version = "0.2.0"
-
-[[deps.VTP]]
-deps = ["AutoHashEquals", "Dates", "FunctionalCollections", "JSON", "LibGit2", "Libdl", "Printf", "Revise"]
-path = "Pluck.jl"
-uuid = "86be7f31-a170-45b4-80a2-1900336dac47"
-version = "0.1.0"
 
 [[deps.VersionParsing]]
 git-tree-sha1 = "58d6e80b4ee071f5efd07fda82cb9fbe17200868"

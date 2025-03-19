@@ -15,11 +15,11 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Profile = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-VTP = "86be7f31-a170-45b4-80a2-1900336dac47"
+Pluck = "86be7f31-a170-45b4-80a2-1900336dac47"
 
 [sources]
 Dice = {rev = "pluck-artifact", url = "https://github.com/mlb2251/Dice.jl.git"}
-VTP = {path = "Pluck.jl"}
+Pluck = {path = "Pluck.jl"}
 
 [compat]
 BenchmarkTools = "1.6.0"

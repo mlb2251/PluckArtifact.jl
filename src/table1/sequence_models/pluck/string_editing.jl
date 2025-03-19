@@ -15,9 +15,9 @@ end
 
 
 function perturb_defs()
-  CHAR_TYPE = VTP.define_type!(:Char, Dict(Symbol("$(a)_") => Symbol[] for a = 'a':'e'))
-  CHARACTERS = [VTP.Construct(CHAR_TYPE, Symbol("$(a)_"), []) for a = 'a':'e']
-  DEFINITIONS[:random_char] = VTP.Definition(:random_char, make_uniform(CHARACTERS), nothing, true)
+  CHAR_TYPE = Pluck.define_type!(:Char, Dict(Symbol("$(a)_") => Symbol[] for a = 'a':'e'))
+  CHARACTERS = [Pluck.Construct(CHAR_TYPE, Symbol("$(a)_"), []) for a = 'a':'e']
+  DEFINITIONS[:random_char] = Pluck.Definition(:random_char, make_uniform(CHARACTERS), nothing, true)
   @define "strings_eq" """
   (Y (λ strings_eq l1 l2 -> (case l1 of 
     Nil => (case l2 of Nil => true | Cons _ _ => false)
@@ -293,7 +293,7 @@ end
 
 
 
-# VTP.bdd_forward("""(strings_eq 
+# Pluck.bdd_forward("""(strings_eq 
 #   (perturb (Cons (a_) (Cons (b_) (Cons (c_) (Cons (c_) (Cons (d_) (Nil)))))))
 #            (Cons (a_) (Cons (b_) (Cons (c_) (Cons (d_) (Nil)))))
 # )
@@ -302,7 +302,7 @@ end
 
 
 
-# VTP.bdd_forward("""(strings_eq 
+# Pluck.bdd_forward("""(strings_eq 
 #   (perturb (Cons (a_) (Cons (b_) (Cons (c_) (Cons (c_) (Cons (d_) (Nil)))))))
 #            (Cons (a_) (Cons (b_) (Cons (c_) (Cons (d_) (Cons (e_) (Nil))))))
 # )
@@ -471,25 +471,25 @@ end
 # Best speed would come from DP-like solution; but more PCFG-like than HMM-like.
 # But is there a variable ordering that makes this better? Seems important to share
 # checking of the remainder of the list.
-# VTP.bdd_forward("""(nat_lists_eq 
+# Pluck.bdd_forward("""(nat_lists_eq 
 #   (perturb (Cons 2 (Cons 0 (Cons 3 (Cons 3 (Cons 1 (Nil)))))))
 #            (Cons 5 (Cons 0 (Cons 3 (Cons 3 (Cons 1 (Cons 2 (Nil)))))))
 # )
 # """)
 
-# VTP.bdd_forward("""(nat_lists_eq 
+# Pluck.bdd_forward("""(nat_lists_eq 
 #   (perturb (Cons 2 (Cons 0 (Cons 3 (Cons 3 (Cons 1 (Nil)))))))
 #            (Cons 2 (Cons 0 (Cons 3 (Cons 3 (Cons 1 (Nil))))))
 # )
 # """)
 
-# VTP.bdd_forward("""(nat_lists_eq 
+# Pluck.bdd_forward("""(nat_lists_eq 
 #   (perturb (Cons 2 (Cons (geometric 0.5) (Cons 3 (Cons 3 (Cons 1 (Nil)))))))
 #            (Cons 2 (Cons 0 (Cons 3 (Cons 3 (Cons 1 (Nil))))))
 # )
 # """)
 
-# VTP.bdd_forward("""(nat_lists_eq 
+# Pluck.bdd_forward("""(nat_lists_eq 
 #   (perturb (Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 (Cons 2 (Cons 0 (Cons 3 (Cons 3 (Cons 1 (Nil))))))))))))
 #            (Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 (Cons 2 (Cons 0 (Cons 3 (Cons 3 (Cons 1 (Nil)))))))))))
 # )

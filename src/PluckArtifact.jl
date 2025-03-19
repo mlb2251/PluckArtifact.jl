@@ -9,7 +9,7 @@ using BenchmarkTools
 using Printf
 using Profile
 using PProf
-using VTP
+using Pluck
 using Dice # for baseline
 
 include("utils.jl")
