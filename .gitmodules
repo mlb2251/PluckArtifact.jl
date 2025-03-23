@@ -1,5 +1,5 @@
 [submodule "Pluck.jl"]
 	path = Pluck.jl
 	url = https://github.com/mlb2251/PluckArtifactDependency.jl.git
-	branch = pluck
+	branch = pldi_revisions
 
