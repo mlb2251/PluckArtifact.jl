@@ -15,7 +15,7 @@ function sorted_defs()
   """
 
   @define "random_num_larger_than" """
-  (λmin -> (+ randnat min))
+  (λmin -> (+ (randnat) min))
   """
 
   @define "random_num_larger_than_fuel" """
@@ -53,35 +53,14 @@ function make_long_sorted_list(n, m = 0)
     end
 end
 
-# generate_sorted_list(n) = "(nat_lists_equal (generate_sorted_list (O)) $(make_long_sorted_list(n)))"
 
 generate_sorted_list_test(l; equality = "nat_lists_equal") = "($equality (generate_sorted_list (O)) $(make_list_from_julia_list(l)))"
 generate_sorted_list_test_fuel(l, fuel, fuel_num) = "(nat_lists_equal (generate_sorted_list_fuel $fuel $fuel_num (O)) $(make_list_from_julia_list(l)))"
 
+SORTED_LIST_INPUT = [0, 3, 7, 12, 13, 15, 16, 20]
 
-
-l = [0, 3, 7, 12, 13, 15, 16, 20, 21, 25][1:8]
-sorted_list_query() = generate_sorted_list_test(l)
-test_to_perform_fuel(fuel, fuel_num) = generate_sorted_list_test_fuel(l, fuel, fuel_num)
-
-
-function run_sorted_list_bdd(; kwargs...)
-    sorted_defs()
-    @bbtime bdd_forward(test_to_perform; state=$BDDEvalState(; $kwargs...))
-end
-
-function run_sorted_list_lazy(; fuel=nothing, kwargs...)
-    sorted_defs()
-    if isnothing(fuel)
-        @bbtime lazy_enumerate(test_to_perform; $kwargs...)
-    else
-        (fuel, fuel_num) = fuel
-        @bbtime lazy_enumerate(test_to_perform_fuel($fuel, $fuel_num); $kwargs...)
-    end
-end
-
-# run_sorted_list_bdd()
-
+sorted_list_query() = generate_sorted_list_test(SORTED_LIST_INPUT)
+test_to_perform_fuel(fuel, fuel_num) = generate_sorted_list_test_fuel(SORTED_LIST_INPUT, fuel, fuel_num)
 
 add_benchmark!("sorted_list", "pluck_default", PluckBenchmark(sorted_list_query(); pre=sorted_defs))
-add_benchmark!("sorted_list", "pluck_strict_enum", PluckBenchmark(sorted_list_query(); pre=sorted_defs, timeout=true))
+add_benchmark!("sorted_list", "pluck_strict_enum", PluckBenchmark(test_to_perform_fuel(9, 6); pre=sorted_defs, timeout=true))

@@ -63,25 +63,47 @@ function get_benchmark(baseline::String, strategy::String)
 end
 
 
-function run_benchmark(benchmark::PluckBenchmark, strategy; fast=false)
+function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false)
     benchmark.pre !== nothing && benchmark.pre()
     benchmark.query = isnothing(benchmark.make_query) ? benchmark.query : benchmark.make_query()
     expr = parse_expr(benchmark.query)
+    time_limit = benchmark.timeout ? 60.0 : nothing # only for lazy and eager enumeration
+    fast |= !isnothing(time_limit) # if we have a time limit, we want normal timing not bbtime
+
+    if !isnothing(time_limit)
+        printstyled("using time limit $time_limit seconds for $strategy\n"; color=:yellow)
+    end
 
     fn_to_time = if strategy == "ours"
         benchmark.normalize ? () -> bdd_normalize(bdd_forward(expr)) : () -> bdd_forward(expr)
     elseif strategy == "smc"
         benchmark.normalize ? () -> bdd_normalize(bdd_forward_with_suspension(expr)) : () -> bdd_forward_with_suspension(expr)
     elseif strategy == "lazy_enum"
-        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr)) : () -> lazy_enumerate(expr)
+        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; time_limit)) : () -> lazy_enumerate(expr; time_limit)
     elseif strategy == "eager_enum"
         strict_kwargs = Dict(:strict => true, :disable_cache => true, :disable_traces => true)
-        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; strict_kwargs...)) : () -> lazy_enumerate(expr; strict_kwargs...)
+        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; time_limit, strict_kwargs...)) : () -> lazy_enumerate(expr; strict_kwargs..., time_limit)
     else
         error("Unknown strategy: $strategy")
     end
 
-    return do_timing(fn_to_time; fast=fast)
+    res, timing = do_timing(fn_to_time; fast=fast)
+
+    hit_limit = res == []
+    if !isnothing(time_limit)
+        if timing > 1000 * time_limit
+            # time limit
+            printstyled("[expected] hit limit for $strategy\n"; color=:green)
+            timing = "*timeout*"
+        elseif hit_limit
+            # depth or stackoverflow limit
+            printstyled("[unexpected] hit non-timeout limit for $strategy in $(timing) ms\n"; color=:yellow)
+        else
+            printstyled("[unexpected] didn't hit time limit for $strategy instead just took $(timing) ms\n"; color=:red)
+        end
+    end
+
+    return res, timing
 end
 
 function run_benchmark(benchmark::DiceBenchmark, strategy; fast=false)

@@ -22,11 +22,30 @@ function hmm_defs()
 
   @define "generate_observations" "(Y (λ rec n -> (case n of O => (Nil) | S => (λ npred -> (Cons (True) (rec npred))))))"
 
+
+  @define "hmm_fuel" """
+ (Y (λ rec fuel z0 -> (case fuel of O => (Nil) | S => (λfuel ->
+  
+  (let (z1 (flip (if z0 0.7 0.1)))   
+      (Cons (flip (if z1 0.3 0.6)) (rec fuel z1)))
+      
+      ))
+  ))
+
+    
+  """
+
+
+  
+
+
+
   @define "hmm_example" "(λ n -> (prefix_equals? (hmm (False)) (generate_observations n)))"
   @define "hmm_example_smc" "(λ n -> (prefix_equals_smc? (hmm (False)) (generate_observations n)))"
+  @define "hmm_example_fuel" "(λ n -> (prefix_equals? (hmm_fuel n (False)) (generate_observations n)))"
 end
 
 add_benchmark!("hmm", "pluck_default", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs))
-add_benchmark!("hmm", "pluck_strict_enum", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs, timeout=true))
+add_benchmark!("hmm", "pluck_strict_enum", PluckBenchmark("(hmm_example_fuel 50)"; pre=hmm_defs, timeout=true))
 add_benchmark!("hmm", "pluck_lazy_enum", PluckBenchmark("(hmm_example 50)"; pre=hmm_defs, timeout=true))
 

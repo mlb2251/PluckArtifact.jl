@@ -1,7 +1,56 @@
 # TABLE 1
 
+# ["eager_enum", "lazy_enum", "dice", "ours"
+COL = ours
+# row name from table1 printout
+ROW = noisy_or
+# "original" or "added" where "added" is the new camera-ready benchmarks
+WHICH = original
+
+# Whether to use the cached results if this command is run again
+CACHE = true
+
+# Make a single cell
+table-1-cell:
+	julia --project -e "using PluckArtifact; PA.table1_cell(\"$(COL)\", \"$(ROW)\", force=true)"
+
+# Make a whole column
+table-1-col:
+	julia --project -e "using PluckArtifact; PA.table1(\"$(COL)\"; which=:$(WHICH), cache=$(CACHE))"
+
+# Make the whole table
 table-1:
-	julia --project -e "using PluckArtifact; PA.table1()"
+	make table-1-col COL=ours
+	make table-1-col COL=dice
+	make table-1-col COL=lazy_enum
+	make table-1-col COL=eager_enum
+	make table-1-show
+
+# Show the table
+table-1-show:
+	julia --project -e "using PluckArtifact; PA.show_table1(;which=:$(WHICH))"
+
+table-1-timeout-lazy:
+	make table-1-cell COL=lazy_enum ROW=alarm
+	make table-1-cell COL=lazy_enum ROW=insurance
+	make table-1-cell COL=lazy_enum ROW=hepar2
+	make table-1-cell COL=lazy_enum ROW=pigs
+	make table-1-cell COL=lazy_enum ROW=diamond
+	make table-1-cell COL=lazy_enum ROW=ladder
+	make table-1-cell COL=lazy_enum ROW=hmm
+
+table-1-timeout-eager:
+	make table-1-cell COL=eager_enum ROW=water
+	make table-1-cell COL=eager_enum ROW=alarm
+	make table-1-cell COL=eager_enum ROW=insurance
+	make table-1-cell COL=eager_enum ROW=hepar2
+	make table-1-cell COL=eager_enum ROW=pigs
+	make table-1-cell COL=eager_enum ROW=diamond
+	make table-1-cell COL=eager_enum ROW=ladder
+	make table-1-cell COL=eager_enum ROW=hmm
+	make table-1-cell COL=eager_enum ROW=pcfg
+	make table-1-cell COL=eager_enum ROW=string_editing
+	make table-1-cell COL=eager_enum ROW=sorted_list
 
 # FIGURE 4
 

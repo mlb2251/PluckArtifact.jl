@@ -17,10 +17,5 @@ include("benchmarks.jl")
 include("table1/table1.jl")
 include("figure4/figure4.jl")
 
-function artifact()
-    table1()
-    figure4()
-    figure5()
-end
 
 end

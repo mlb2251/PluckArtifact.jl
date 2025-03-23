@@ -15,61 +15,80 @@ for name in sequence_models
     include("sequence_models/dice/$name.jl")
 end
 
-
-function table1()
-    printstyled("=== Evaluating Table 1 ===\n"; color=:green)
-
-    table1_timings = Dict()
-
-    for strategy in ["ours", "dice", "lazy_enum", "eager_enum"]
-        printstyled("=== Evaluating $strategy ===\n"; color=:blue)
-        for row in original_rows
-            evaluate_cell!(table1_timings, strategy, row)
-        end
-        for row in added_rows
-            evaluate_cell!(table1_timings, strategy, row)
+function table1(strategy; which=:original, cache=false)
+    printstyled("=== Evaluating Table 1 [$which] ($strategy) ===\n"; color=:green)
+    rows = Dict(:original => original_rows, :added => added_rows)[which]
+    for row in rows
+        if !cache || !has_cell(strategy, row)
+            table1_cell(strategy, row)
+        else
+            printstyled("using cached result for $strategy on $row\n"; color=:blue)
         end
     end
-    println(table1_timings)
-
-    println("Original submission benchmarks:")
-    print_table(["Benchmark", "Eager Enum (ms)", "Lazy Enum (ms)", "Dice (ms)", "Ours (ms)"], table1_timings, original_rows, ["eager_enum", "lazy_enum", "dice", "ours"])
-    println()
-    println("Added benchmarks:")
-    print_table(["Benchmark", "Eager Enum (ms)", "Lazy Enum (ms)", "Dice (ms)", "Ours (ms)"], table1_timings, added_rows, ["eager_enum", "lazy_enum", "dice", "ours"])
-
-    table1_timings
 end
 
-function evaluate_cell!(timings, strategy, baseline)
-    benchmark = get_benchmark(baseline, strategy)
-    subtimings = get!(Dict, timings, strategy)
+function has_cell(strategy, row)
+    isfile("out/table1/$strategy/$row.json")
+end
+
+function get_cell(strategy, row)
+    open("out/table1/$strategy/$row.json", "r") do f
+        json = JSON.parse(f)
+        json["timing"]
+    end
+end
+
+function show_table1(;which=:original)
+    rows = Dict(:original => original_rows, :added => added_rows)[which]
+    # load all the timings
+    timings = Dict()
+    for strategy in ["eager_enum", "lazy_enum", "dice", "ours"]
+        timings[strategy] = Dict()
+        for row in rows
+            if has_cell(strategy, row)
+                timings[strategy][row] = get_cell(strategy, row)
+            else
+                timings[strategy][row] = "missing"
+            end
+        end
+    end
+
+    print_table(["Benchmark", "Eager Enum (ms)", "Lazy Enum (ms)", "Dice (ms)", "Ours (ms)"], timings, rows, ["eager_enum", "lazy_enum", "dice", "ours"])
+end
+
+function table1_cell(strategy, benchmark_name; force=false)
+    benchmark = get_benchmark(benchmark_name, strategy)
     
-    if isnothing(benchmark)
-        printstyled("missing benchmark for $strategy on $baseline\n"; color=:red)
-        subtimings[baseline] = "missing"
-        return nothing
-    end
+    res = nothing
 
-    if benchmark.skip
+    timing = if isnothing(benchmark)
+        printstyled("missing benchmark for $strategy on $benchmark_name\n"; color=:red)
+        "no_benchmark"
+    elseif benchmark.skip && !force
         @assert !benchmark.timeout "can't be both skip and timeout"
-        printstyled("skipping $strategy on $baseline\n"; color=:yellow)
-        subtimings[baseline] = "skipped"
-        return nothing
-    end
+        printstyled("skipping [marked to skip] $strategy on $benchmark_name\n"; color=:yellow)
+        "skipped"
+    elseif benchmark.timeout && !force
+        printstyled("skipping [expected timeout] $strategy on $benchmark_name\n"; color=:yellow)
+        "timeout"
+    else
+        println("evaluating: $strategy on $benchmark_name")
+        res, timing = isnothing(benchmark.run_benchmark) ? run_benchmark(benchmark, strategy) : benchmark.run_benchmark(benchmark, strategy)
+        timing
+    end    
 
-    if benchmark.timeout
-        printstyled("skipping $strategy on $baseline\n"; color=:yellow)
-        subtimings[baseline] = "timeout"
-        return nothing
-    end
+    json = Dict(
+        "timing" => timing
+    )
 
-    # @assert !haskey(subtimings, baseline) "timing for $baseline already exists"
-    println("evaluating: $strategy on $baseline")
-    # println("MEM: $(mem_usage_mb()) MB")
-    res, timing = isnothing(benchmark.run_benchmark) ? run_benchmark(benchmark, strategy) : benchmark.run_benchmark(benchmark, strategy)
-    subtimings[baseline] = timing
-    return res
+    path = "out/table1/$strategy/$benchmark_name.json"
+    mkpath(dirname(path))
+    open(path, "w") do f
+        JSON.print(f, json, 2)
+    end
+    println("wrote $path")
+
+    return timing
 end
 
 
