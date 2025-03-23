@@ -1,6 +1,6 @@
 data/large_bayes_nets/*.lisp
 data/large_bayes_nets/*.jl.ignore
 .vscode/
-out/
+/out
 build.log
 data_to_plot
