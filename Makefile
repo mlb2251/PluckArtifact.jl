@@ -24,11 +24,15 @@ table-1:
 	make table-1-col COL=dice
 	make table-1-col COL=lazy_enum
 	make table-1-col COL=eager_enum
+	make table-1-sizes
 	make table-1-show
 
 # Show the table
 table-1-show:
 	julia --project -e "using PluckArtifact; PA.show_table1(;which=:$(WHICH))"
+
+table-1-sizes:
+	julia --project -e "using PluckArtifact; PA.table1_sizes(;which=:$(WHICH))"
 
 table-1-timeout-lazy:
 	make table-1-cell COL=lazy_enum ROW=alarm
