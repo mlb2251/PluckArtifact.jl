@@ -37,7 +37,7 @@ function perturb(s, fuel, max_insert_length)
   insertion = random_string(0.01, max_insert_length)
 
   match(s, [:Nil => () -> insertion, 
-            :Cons => (hd, tl) -> let perturbed_tail = perturb(tl, fuel-1, max_insert_length); (@dice_ite if flip(0.99); list_append(insertion, Dice.Cons(PerturbChar, hd, perturbed_tail)); else; perturbed_tail; end); end])
+            :Cons => (hd, tl) -> let perturbed_tail = perturb(tl, fuel-1, max_insert_length); (@dice_ite if flip(0.99); list_append(insertion, Dice.Cons(PerturbChar, (@dice_ite if flip(0.01); random_char() ; else; hd; end), perturbed_tail)); else; perturbed_tail; end); end])
 
 end
 
