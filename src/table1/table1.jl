@@ -15,6 +15,16 @@ for name in sequence_models
     include("sequence_models/dice/$name.jl")
 end
 
+function table1_sizes(; which=:original)
+    printstyled("=== Evaluating Table 1 Sizes [$which] ===\n"; color=:green)
+    rows = Dict(:original => original_rows, :added => added_rows)[which]
+    for row in rows
+        printstyled("evaluating $row\n"; color=:green)
+        benchmark = get_benchmark(row, "ours")
+        run_benchmark(benchmark, "ours"; show_bdd_size=true, fast=true)
+    end
+end
+
 function table1(strategy; which=:original, cache=false)
     printstyled("=== Evaluating Table 1 [$which] ($strategy) ===\n"; color=:green)
     rows = Dict(:original => original_rows, :added => added_rows)[which]

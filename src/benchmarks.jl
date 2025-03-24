@@ -63,7 +63,7 @@ function get_benchmark(baseline::String, strategy::String)
 end
 
 
-function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false)
+function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, kwargs...)
     benchmark.pre !== nothing && benchmark.pre()
     benchmark.query = isnothing(benchmark.make_query) ? benchmark.query : benchmark.make_query()
     expr = parse_expr(benchmark.query)
@@ -75,14 +75,14 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false)
     end
 
     fn_to_time = if strategy == "ours"
-        benchmark.normalize ? () -> bdd_normalize(bdd_forward(expr)) : () -> bdd_forward(expr)
+        benchmark.normalize ? () -> bdd_normalize(bdd_forward(expr; kwargs...)) : () -> bdd_forward(expr; kwargs...)
     elseif strategy == "smc"
-        benchmark.normalize ? () -> bdd_normalize(bdd_forward_with_suspension(expr)) : () -> bdd_forward_with_suspension(expr)
+        benchmark.normalize ? () -> bdd_normalize(bdd_forward_with_suspension(expr; kwargs...)) : () -> bdd_forward_with_suspension(expr; kwargs...)
     elseif strategy == "lazy_enum"
-        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; time_limit)) : () -> lazy_enumerate(expr; time_limit)
+        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; time_limit, kwargs...)) : () -> lazy_enumerate(expr; time_limit, kwargs...)
     elseif strategy == "eager_enum"
         strict_kwargs = Dict(:strict => true, :disable_cache => true, :disable_traces => true)
-        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; time_limit, strict_kwargs...)) : () -> lazy_enumerate(expr; strict_kwargs..., time_limit)
+        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; time_limit, strict_kwargs..., kwargs...)) : () -> lazy_enumerate(expr; strict_kwargs..., time_limit, kwargs...)
     else
         error("Unknown strategy: $strategy")
     end
