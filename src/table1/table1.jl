@@ -48,7 +48,7 @@ function get_cell(strategy, row)
     end
 end
 
-function show_table1(;which=:original)
+function show_table1(;which=:original, latex=false)
     rows = Dict(:original => original_rows, :added => added_rows)[which]
     # load all the timings
     timings = Dict()
@@ -63,7 +63,7 @@ function show_table1(;which=:original)
         end
     end
 
-    print_table(["Benchmark", "Eager Enum (ms)", "Lazy Enum (ms)", "Dice (ms)", "Ours (ms)"], timings, rows, ["eager_enum", "lazy_enum", "dice", "ours"])
+    print_table(["Benchmark", "Eager Enum (ms)", "Lazy Enum (ms)", "Dice (ms)", "Ours (ms)"], timings, rows, ["eager_enum", "lazy_enum", "dice", "ours"]; latex=latex)
 end
 
 function table1_cell(strategy, benchmark_name; force=false)

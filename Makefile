@@ -9,6 +9,8 @@ WHICH = original
 
 # Whether to use the cached results if this command is run again
 CACHE = true
+# Whether to use latex formatting
+LATEX = false
 
 # Make a single cell
 table-1-cell:
@@ -29,7 +31,7 @@ table-1:
 
 # Show the table
 table-1-show:
-	julia --project -e "using PluckArtifact; PA.show_table1(;which=:$(WHICH))"
+	julia --project -e "using PluckArtifact; PA.show_table1(;which=:$(WHICH), latex=$(LATEX))"
 
 table-1-sizes:
 	julia --project -e "using PluckArtifact; PA.table1_sizes(;which=:$(WHICH))"

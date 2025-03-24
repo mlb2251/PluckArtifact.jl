@@ -32,10 +32,9 @@ const groups_of_strategy = Dict(
 small_bayes_nets = ["burglary", "evidence1", "evidence2", "grass", "murder_mystery", "noisy_or", "two_coins"]
 network_models = ["diamond", "ladder"]
 sequence_models = ["pcfg", "hmm", "sorted_list", "string_editing"]
-original_rows = ["noisy_or", "burglary", "cancer", "survey", "water", "alarm", "insurance", "hepar2", "pigs", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list"]
-added_rows = ["hailfinder", "munin", "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
+original_rows = ["cancer", "survey", "alarm", "insurance", "hepar2", "hailfinder", "pigs", "water", "munin", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list"]
+added_rows = ["noisy_or", "burglary",  "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
 all_benchmarks = ["noisy_or", "burglary", "cancer", "survey", "water", "alarm", "insurance", "hepar2", "pigs", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list", "hailfinder", "munin", "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
-
 
 const groups_of_baseline = Dict()
 

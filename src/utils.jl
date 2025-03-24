@@ -35,11 +35,15 @@ macro bbtime(args...)
 end
 
 
-function print_table(headers, timings, rownames, colnames)
+function print_table(headers, timings, rownames, colnames; latex=false)
     @assert length(colnames) == length(headers) - 1
     dicts = [get(timings, colname, Dict()) for colname in colnames]
     rows = rows_from_dicts(dicts, headers, rownames)
-    print_table_from_rows(rows, headers)
+    if latex
+        latex_table(rows, headers)
+    else
+        print_table_from_rows(rows, headers)
+    end
 end
 
 """
@@ -86,6 +90,64 @@ function print_table_from_rows(rows, headers)
             print(rpad(cell, padding))
         end
         println()
+    end
+end
+
+
+
+# 
+# \quad Alarm (37 nodes) &  \textcolor{red}{timeout} & \textcolor{red}{timeout} & \underline{130.82~ms} & \textbf{78.75~ms} & 296 & 94,947 \\
+
+function latex_table(rows, headers)
+
+    # Convert numeric cells to formatted strings
+    rows = map(rows) do row
+        # sort the cells that are numbers
+        sorted_order = map((i_cell) -> i_cell[1], sort(filter(i_cell -> i_cell[2] isa Number, collect(enumerate(row))), by = x -> x[2]))
+        # @show sorted_order
+        # @show [row[i] for i in sorted_order]
+        map(enumerate(row)) do (i, cell)
+            if i == 1
+                title = Dict(
+                    "cancer" => "Cancer (5 nodes)",
+                    "survey" => "Survey (6 nodes) ",
+                    "alarm" => "Alarm (37 nodes) ",
+                    "insurance" => "Insurance (27 nodes)",
+                    "hepar2" => "Hepar2 (70 nodes)",
+                    "hailfinder" => "Hailfinder (56 nodes)",
+                    "pigs" => "Pigs (441 nodes)",
+                    "water" => "Water (32 nodes)",
+                    "munin" => "Munin (1041 nodes)",
+                    "diamond" => "Diamond Network",
+                    "ladder" => "Ladder Network",
+                    "hmm" => "HMM (50 steps)",
+                    "pcfg" => "PCFG (23 terminals)",
+                    "string_editing" => "String Editing (4\$\\to\$5 chars)",
+                    "sorted_list" => "Sorted List Gen. (8 elements)"
+                )[cell]
+                cell = "\\quad $title"
+                return cell
+            end
+
+            cell = cell isa Number ? @sprintf("%.2f~ms", cell) : "\\textcolor{red}{$cell}"
+            if length(sorted_order) > 0 && i == sorted_order[1]
+                cell = "\\textbf{$cell}"
+            elseif length(sorted_order) > 1 && i == sorted_order[2]
+                cell = "\\underline{$cell}"
+            end
+            cell
+        end
+    end
+
+    for (i, row) in enumerate(rows)
+        for (j, cell) in enumerate(row)
+            if j == 1
+                printstyled(cell, " & "; color=:green)
+            else
+                print(cell, " & ")
+            end
+        end
+        println("\\\\")
     end
 end
 
