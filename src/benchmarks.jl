@@ -29,12 +29,12 @@ const groups_of_strategy = Dict(
     "eager_enum" => ["pluck_strict_enum", "pluck_default"],
 )
 
-small_bayes_nets = ["burglary", "evidence1", "evidence2", "grass", "murder_mystery", "noisy_or", "two_coins"]
+small_bayes_nets = ["dice_figure_1", "caesar", "burglary", "evidence1", "evidence2", "grass", "murder_mystery", "noisy_or", "two_coins"]
 network_models = ["diamond", "ladder"]
 sequence_models = ["pcfg", "hmm", "sorted_list", "string_editing"]
 original_rows = ["cancer", "survey", "alarm", "insurance", "hepar2", "hailfinder", "pigs", "water", "munin", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list"]
-added_rows = ["noisy_or", "burglary",  "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
-all_benchmarks = ["noisy_or", "burglary", "cancer", "survey", "water", "alarm", "insurance", "hepar2", "pigs", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list", "hailfinder", "munin", "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
+added_rows = ["noisy_or", "burglary",  "evidence1", "evidence2", "grass", "murder_mystery", "two_coins", "caesar", "dice_figure_1"]
+all_benchmarks = ["dice_figure_1", "caesar", "noisy_or", "burglary", "cancer", "survey", "water", "alarm", "insurance", "hepar2", "pigs", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list", "hailfinder", "munin", "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
 
 const groups_of_baseline = Dict()
 
@@ -70,7 +70,7 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, 
     fast |= !isnothing(time_limit) # if we have a time limit, we want normal timing not bbtime
 
     if !isnothing(time_limit)
-        printstyled("using time limit $time_limit seconds for $strategy\n"; color=:yellow)
+        println("using time limit $time_limit seconds")
     end
 
     fn_to_time = if strategy == "ours"

@@ -12,13 +12,23 @@ CACHE = true
 # Whether to use latex formatting
 LATEX = false
 
+FORCE = true
+
 # Make a single cell
 table-1-cell:
-	julia --project -e "using PluckArtifact; PA.table1_cell(\"$(COL)\", \"$(ROW)\", force=true)"
+	julia --project -e "using PluckArtifact; PA.table1_cell(\"$(COL)\", \"$(ROW)\", force=$(FORCE))"
 
 # Make a whole column
 table-1-col:
 	julia --project -e "using PluckArtifact; PA.table1(\"$(COL)\"; which=:$(WHICH), cache=$(CACHE))"
+
+
+# Make a whole row
+table-1-row:
+	make table-1-cell COL=ours ROW=$(ROW)
+	make table-1-cell COL=dice ROW=$(ROW)
+	make table-1-cell COL=lazy_enum ROW=$(ROW)
+	make table-1-cell COL=eager_enum ROW=$(ROW)
 
 # Make the whole table
 table-1:

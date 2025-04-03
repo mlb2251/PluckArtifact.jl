@@ -109,6 +109,13 @@ function latex_table(rows, headers)
         map(enumerate(row)) do (i, cell)
             if i == 1
                 title = Dict(
+                    "noisy_or" => "Noisy Or (8 nodes)",
+                    "burglary" => "Burglary (6 nodes)",
+                    "evidence1" => "Evidence 1",
+                    "evidence2" => "Evidence 2",
+                    "grass" => "Grass",
+                    "murder_mystery" => "Murder Mystery",
+                    "two_coins" => "Two Coins",
                     "cancer" => "Cancer (5 nodes)",
                     "survey" => "Survey (6 nodes) ",
                     "alarm" => "Alarm (37 nodes) ",
@@ -123,7 +130,9 @@ function latex_table(rows, headers)
                     "hmm" => "HMM (50 steps)",
                     "pcfg" => "PCFG (23 terminals)",
                     "string_editing" => "String Editing (4\$\\to\$5 chars)",
-                    "sorted_list" => "Sorted List Gen. (8 elements)"
+                    "sorted_list" => "Sorted List Gen. (8 elements)",
+                    "dice_figure_1" => "Figure 1 from \\citet{holtzen2020scaling}",
+                    "caesar" => "Caesar Cipher (100 chars)",
                 )[cell]
                 cell = "\\quad $title"
                 return cell
