@@ -43,6 +43,10 @@ table-1:
 table-1-show:
 	julia --project -e "using PluckArtifact; PA.show_table1(;which=:$(WHICH), latex=$(LATEX))"
 
+# Show the diff between actual and expected table1 results
+table-1-diff:
+	julia --project -e "using PluckArtifact; PA.diff_table1(;which=:$(WHICH))"
+
 table-1-sizes:
 	julia --project -e "using PluckArtifact; PA.table1_sizes(;which=:$(WHICH))"
 

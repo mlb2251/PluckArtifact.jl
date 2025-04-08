@@ -66,6 +66,124 @@ function show_table1(;which=:original, latex=false)
     print_table(["Benchmark", "Eager Enum (ms)", "Lazy Enum (ms)", "Dice (ms)", "Ours (ms)"], timings, rows, ["eager_enum", "lazy_enum", "dice", "ours"]; latex=latex)
 end
 
+function diff_table1(;which=:original, threshold=.2, actual_dir="out/table1", expected_dir="out/table1_expected")
+    rows = Dict(:original => original_rows, :added => added_rows)[which]
+    
+    # Load timings from both directories
+    actual_timings = load_timings_for_dir(actual_dir, rows)
+    expected_timings = load_timings_for_dir(expected_dir, rows)
+    
+    # Compute differences
+    diff_timings = compute_diff_timings(actual_timings, expected_timings, rows, threshold)
+    
+    # Display the diff table
+    print_diff_table(["Benchmark", "Eager Enum diff", "Lazy Enum diff", "Dice diff", "Ours diff"], 
+                    diff_timings, rows, ["eager_enum", "lazy_enum", "dice", "ours"])
+end
+
+# Helper function to load timings from a directory
+function load_timings_for_dir(dir_path, rows)
+    timings = Dict()
+    for strategy in ["eager_enum", "lazy_enum", "dice", "ours"]
+        timings[strategy] = Dict()
+        for row in rows
+            if isfile("$dir_path/$strategy/$row.json")
+                timings[strategy][row] = get_cell_from_file("$dir_path/$strategy/$row.json")
+            else
+                timings[strategy][row] = "missing"
+            end
+        end
+    end
+    return timings
+end
+
+# Helper function to compute diff timings between actual and expected
+function compute_diff_timings(actual_timings, expected_timings, rows, threshold)
+    diff_timings = Dict()
+    for strategy in ["eager_enum", "lazy_enum", "dice", "ours"]
+        diff_timings[strategy] = Dict()
+        for row in rows
+            actual = actual_timings[strategy][row]
+            expected = expected_timings[strategy][row]
+            
+            if actual isa Number && expected isa Number
+                abs_diff = actual - expected
+                pct_diff = 100.0 * abs_diff / expected
+                
+                # Format the difference with color if above threshold
+                diff_str = @sprintf("%+.1f%% (%+.1f)", pct_diff, abs_diff)
+                
+                if abs(pct_diff) > threshold * 100
+                    color = pct_diff > 0 ? :red : :green
+                    diff_timings[strategy][row] = (diff_str, color)
+                else
+                    diff_timings[strategy][row] = diff_str
+                end
+            else
+                diff_timings[strategy][row] = "missing"
+            end
+        end
+    end
+    return diff_timings
+end
+
+# Helper function to get cell from a specific file path
+function get_cell_from_file(file_path)
+    open(file_path, "r") do f
+        json = JSON.parse(f)
+        json["timing"]
+    end
+end
+
+# Custom print function for colored diff output
+function print_diff_table(headers, diff_timings, rows, colnames)
+    col_widths = [length(h) for h in headers]
+    
+    # First pass to get maximum column widths for all cells
+    for row_name in rows
+        col_widths[1] = max(col_widths[1], length(string(row_name)))
+        for (i, colname) in enumerate(colnames)
+            cell = get(diff_timings[colname], row_name, "missing")
+            cell_text = cell isa Tuple ? cell[1] : string(cell)
+            col_widths[i+1] = max(col_widths[i+1], length(cell_text))
+        end
+    end
+    
+    # Add padding
+    col_widths .+= 1
+    
+    # Process rows with now-known column widths
+    processed_rows = []
+    for row_name in rows
+        row = Any[row_name]
+        for colname in colnames
+            cell = get(diff_timings[colname], row_name, "missing")
+            push!(row, cell)
+        end
+        push!(processed_rows, row)
+    end
+    
+    # Print headers
+    for (i, (width, header)) in enumerate(zip(col_widths, headers))
+        print(rpad(header, width))
+    end
+    println()
+    println("-" ^ sum(col_widths))
+    
+    # Print rows with colored cells
+    for row in processed_rows
+        for (i, (width, cell)) in enumerate(zip(col_widths, row))
+            if i == 1 || !(cell isa Tuple)
+                print(rpad(string(cell), width))
+            else
+                cell_text, color = cell
+                printstyled(rpad(cell_text, width); color=color)
+            end
+        end
+        println()
+    end
+end
+
 function table1_cell(strategy, benchmark_name; force=false)
     benchmark = get_benchmark(benchmark_name, strategy)
     
