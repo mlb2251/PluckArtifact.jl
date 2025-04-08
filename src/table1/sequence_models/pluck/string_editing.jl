@@ -15,7 +15,7 @@ function perturb_defs()
   end
 
   CHAR_TYPE = Pluck.define_type!(:Char, Dict(Symbol("$(a)_") => Symbol[] for a = 'a':'e'))
-  CHARACTERS = [Pluck.Construct(CHAR_TYPE, Symbol("$(a)_"), []) for a = 'a':'e']
+  CHARACTERS = [Pluck.Construct(Symbol("$(a)_"), []) for a = 'a':'e']
   DEFINITIONS[:random_char] = Pluck.Definition(:random_char, make_uniform(CHARACTERS), nothing)
   @define "strings_eq" """
   (Y (λ strings_eq l1 l2 -> (case l1 of 

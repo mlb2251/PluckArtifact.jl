@@ -54,8 +54,8 @@ function make_long_sorted_list(n, m = 0)
 end
 
 
-generate_sorted_list_test(l; equality = "nat_lists_equal") = "($equality (generate_sorted_list (O)) $(make_list_from_julia_list(l)))"
-generate_sorted_list_test_fuel(l, fuel, fuel_num) = "(nat_lists_equal (generate_sorted_list_fuel $fuel $fuel_num (O)) $(make_list_from_julia_list(l)))"
+generate_sorted_list_test(l; equality = "nat_lists_equal") = "($equality (generate_sorted_list (O)) $(pluck_list(l)))"
+generate_sorted_list_test_fuel(l, fuel, fuel_num) = "(nat_lists_equal (generate_sorted_list_fuel $fuel $fuel_num (O)) $(pluck_list(l)))"
 
 SORTED_LIST_INPUT = [0, 3, 7, 12, 13, 15, 16, 20]
 
