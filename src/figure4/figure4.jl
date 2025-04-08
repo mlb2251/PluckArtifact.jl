@@ -167,7 +167,7 @@ function make_benchmark(task, method, size; idx=nothing)
         if method == "Ours" || method == "Enum"
             return PluckBenchmark(generate_sorted_list_test(input_list); pre=sorted_defs)
         elseif method == "Ours (SMC)"
-            return PluckBenchmark(generate_sorted_list_test(input_list; equality="(suspended_list_eq nats_equal)"); pre=sorted_defs)
+            return PluckBenchmark(generate_sorted_list_test(input_list; equality="(suspendible-list=? nats_equal)"); pre=sorted_defs)
         elseif method == "Dice.jl"
             return DiceBenchmark(() -> pr(lists_equal(gen_sorted_list(length(input_list) + 1, Nat.Z(), 6), make_list(input_list))))
         end
@@ -180,7 +180,7 @@ function make_benchmark(task, method, size; idx=nothing)
         elseif method == "Ours (SMC)"
             input = get_ours_inputs_pcfg()[:inputs][idx]
             @assert length(input) == size "input length ($size) does not match size ($size)"
-            return PluckBenchmark("(suspended_list_eq symbol_equals (generate_pcfg_grammar (SS)) $(make_string_from_julia_list(input)))"; pre=pcfg_defs)
+            return PluckBenchmark("(suspendible-list=? symbol_equals (generate_pcfg_grammar (SS)) $(make_string_from_julia_list(input)))"; pre=pcfg_defs)
         elseif method == "Dice.jl"
             input = get_dice_inputs_pcfg()[:inputs][idx]
             input = replace(input, :a => :aa, :b => :bb, :c => :cc)
