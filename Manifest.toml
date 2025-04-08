@@ -2,7 +2,7 @@
 
 julia_version = "1.11.4"
 manifest_format = "2.0"
-project_hash = "86932f9f4fd52aedfa94256859d6c56d32c4887a"
+project_hash = "777fed64d8376bd377aca9ea3915665e24e5a7b2"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "e2478490447631aedba0823d4d7a80b2cc8cdb32"
@@ -139,11 +139,6 @@ version = "1.1.1"
     Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
     OpenCL = "08131aa3-fb12-5dee-8b74-c09406e224a2"
     oneAPI = "8f75cd03-7ff8-4ecb-9b8f-daf728133b1b"
-
-[[deps.AutoHashEquals]]
-git-tree-sha1 = "4ec6b48702dacc5994a835c1189831755e4e76ef"
-uuid = "15f4f7f2-30c1-5605-9d31-71845cf9641f"
-version = "2.2.0"
 
 [[deps.BangBang]]
 deps = ["Accessors", "ConstructionBase", "InitialValues", "LinearAlgebra"]
@@ -1831,7 +1826,7 @@ version = "1.40.10"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.Pluck]]
-deps = ["AutoHashEquals", "Dates", "FunctionalCollections", "JSON", "LibGit2", "Libdl", "Printf", "Revise"]
+deps = ["DataStructures", "Dates", "FunctionalCollections", "JSON", "Libdl", "Printf", "Revise"]
 path = "Pluck.jl"
 uuid = "86be7f31-a170-45b4-80a2-1900336dac47"
 version = "0.1.0"

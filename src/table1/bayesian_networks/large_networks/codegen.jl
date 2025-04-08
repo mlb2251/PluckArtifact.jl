@@ -53,8 +53,6 @@ function discrete(options, probabilities)
     return build_expr(num_bits, 1, 2^num_bits)
 end
 
-using DataStructures
-
 struct Variable
     name::Symbol
     domain::Vector{Symbol}

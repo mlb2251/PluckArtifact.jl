@@ -8,9 +8,8 @@ function perturb_defs()
       return options[1]
     else
       flip_scrutinee = PrimOp(FlipOp(), [ConstReal(1.0 / length(options))])
-      constructors = [:True, :False]
-      cases = Dict(:True => options[1], :False => make_uniform(options[2:end]))
-      return CaseOf(flip_scrutinee, cases, constructors)
+      cases = Pluck.OrderedDict(:True => options[1], :False => make_uniform(options[2:end]))
+      return CaseOf(flip_scrutinee, cases)
     end
   end
 
