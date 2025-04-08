@@ -61,8 +61,13 @@ function get_benchmark(baseline::String, strategy::String)
     nothing
 end
 
+function run_benchmark(benchmark::String, strategy::String; kwargs...)
+    benchmark = get_benchmark(benchmark, strategy)
+    isnothing(benchmark) && error("Benchmark $benchmark not found for strategy $strategy")
+    run_benchmark(benchmark, strategy; kwargs...)
+end
 
-function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, kwargs...)
+function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, bdd_stats=false, kwargs...)
     benchmark.pre !== nothing && benchmark.pre()
     benchmark.query = isnothing(benchmark.make_query) ? benchmark.query : benchmark.make_query()
     expr = parse_expr(benchmark.query)
@@ -86,7 +91,7 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, 
         error("Unknown strategy: $strategy")
     end
 
-    res, timing = do_timing(fn_to_time; fast=fast)
+    res, timing = do_timing(fn_to_time; fast=fast, bdd_stats=bdd_stats)
 
     hit_limit = res == []
     if !isnothing(time_limit)
@@ -110,11 +115,16 @@ function run_benchmark(benchmark::DiceBenchmark, strategy; fast=false)
     return do_timing(benchmark.fn_to_time; fast=fast)
 end
 
-function do_timing(fn_to_time; fast=false)
+function do_timing(fn_to_time; fast=false, bdd_stats=false)
+    clear_rsdd_time!()
+    tstart = time()
     if fast
         timing1 = (@elapsed (res = fn_to_time())) * 1000;
         if timing1 > 20000
             println("Time: $(timing1/1000) s")
+            total_time = time() - tstart
+            bdd_fract = get_rsdd_time().rsdd_time / total_time
+            println("BDD time: $(100*round(bdd_fract, digits=2))%")
             return res, timing1 # don't run the second time if it's already > 20s
         end
         GC.gc();
@@ -123,5 +133,8 @@ function do_timing(fn_to_time; fast=false)
     else
         res, timing = @bbtime $fn_to_time()
     end
+    total_time = time() - tstart
+    bdd_fract = get_rsdd_time().rsdd_time / total_time
+    println("BDD time: $(100*round(bdd_fract, digits=2))%")
     return res, timing
 end
