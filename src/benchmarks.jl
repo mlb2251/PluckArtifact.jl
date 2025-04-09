@@ -122,7 +122,6 @@ function do_timing(fn_to_time; fast=false)
     clear_rsdd_time!()
     tstart = time()
     if fast
-        println("starting timing")
         timing1 = (@elapsed (res = fn_to_time())) * 1000;
         println("timing done: $timing1")
         if timing1 > 20000
