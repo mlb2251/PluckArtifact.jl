@@ -86,7 +86,7 @@ function run_net(name; mode=:time, eager=false, kwargs...)
     if eager
         f = () -> bdd_forward_strict(bn; state=BDDStrictEvalState(;kwargs...), kwargs...)
     else
-        f = () -> bdd_forward(bn; state=BDDEvalState(;kwargs...))
+        f = () -> bdd_forward(bn; state=LazyKCState(;kwargs...))
     end
 
     println("running...")
