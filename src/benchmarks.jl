@@ -27,6 +27,7 @@ const groups_of_strategy = Dict(
     "dice" => ["dice_default"],
     "lazy_enum" => ["pluck_lazy_enum", "pluck_default"],
     "eager_enum" => ["pluck_strict_enum", "pluck_default"],
+    "eager_kc" => ["pluck_eager_kc", "pluck_default"],
 )
 
 small_bayes_nets = ["dice_figure_1", "caesar", "burglary", "evidence1", "evidence2", "grass", "murder_mystery", "noisy_or", "two_coins"]
@@ -87,6 +88,8 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, 
     elseif strategy == "eager_enum"
         strict_kwargs = Dict(:strict => true, :disable_cache => true, :disable_traces => true)
         benchmark.normalize ? () -> normalize(lazy_enumerate(expr; time_limit, strict_kwargs..., kwargs...)) : () -> lazy_enumerate(expr; strict_kwargs..., time_limit, kwargs...)
+    elseif strategy == "eager_kc"
+        benchmark.normalize ? () -> normalize(Pluck.bdd_forward_strict(expr; state=BDDStrictEvalState(; kwargs...))) : () -> Pluck.bdd_forward_strict(expr; state=BDDStrictEvalState(; kwargs...))
     else
         error("Unknown strategy: $strategy")
     end
