@@ -68,7 +68,7 @@ function run_benchmark(benchmark::String, strategy::String; kwargs...)
     run_benchmark(benchmark, strategy; kwargs...)
 end
 
-function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, bdd_stats=false, kwargs...)
+function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, kwargs...)
     benchmark.pre !== nothing && benchmark.pre()
     benchmark.query = isnothing(benchmark.make_query) ? benchmark.query : benchmark.make_query()
     expr = parse_expr(benchmark.query)
@@ -94,7 +94,7 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, 
         error("Unknown strategy: $strategy")
     end
 
-    res, timing = do_timing(fn_to_time; fast=fast, bdd_stats=bdd_stats)
+    res, timing = do_timing(fn_to_time; fast=fast)
 
     hit_limit = res == []
     if !isnothing(time_limit)
@@ -118,11 +118,13 @@ function run_benchmark(benchmark::DiceBenchmark, strategy; fast=false)
     return do_timing(benchmark.fn_to_time; fast=fast)
 end
 
-function do_timing(fn_to_time; fast=false, bdd_stats=false)
+function do_timing(fn_to_time; fast=false)
     clear_rsdd_time!()
     tstart = time()
     if fast
+        println("starting timing")
         timing1 = (@elapsed (res = fn_to_time())) * 1000;
+        println("timing done: $timing1")
         if timing1 > 20000
             println("Time: $(timing1/1000) s")
             total_time = time() - tstart
