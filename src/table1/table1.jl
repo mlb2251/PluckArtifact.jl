@@ -97,6 +97,73 @@ function load_timings_for_dir(dir_path, rows)
     return timings
 end
 
+function diff_results(dirs...)
+    # get all unique json files in all dirs
+    row_files = unique(vcat([readdir(dir) for dir in dirs if isdir(dir)]...))
+
+    mismatch_errors = []
+    for row_file in row_files
+        all_dirs = []
+        all_worlds = []
+        for dir in dirs
+            if isfile("$dir/$row_file")
+                json = JSON.parse(read("$dir/$row_file", String))
+                (!haskey(json, "result") || json["result"] == "missing" || isnothing(json["result"])) && continue
+                push!(all_dirs, dir)
+                push!(all_worlds, json["result"])
+            end
+        end
+        if length(all_dirs) <= 1
+            printstyled("not enough results to compare: $row_file only exists for $(all_dirs)\n"; color=:yellow)
+            continue
+        end
+        mismatch = compare_results(all_dirs, all_worlds, row_file)
+        mismatch && push!(mismatch_errors, row_file)
+    end
+
+    if isempty(mismatch_errors)
+        printstyled("no mismatches found\n"; color=:green, bold=true)
+    else
+        printstyled("mismatches found on: $(join(mismatch_errors, ", "))\n"; color=:red, bold=true)
+    end
+
+    nothing
+end
+
+function compare_results(all_dirs, all_worlds, row_file)
+    all_worlds = [sort(collect(worlds); by=world->world[2], rev=true) for worlds in all_worlds]
+
+    reference_dir = first(all_dirs)
+    reference_worlds = first(all_worlds)
+    any_mismatch = false
+
+    for (dir, worlds) in zip(all_dirs[2:end], all_worlds[2:end])
+        mismatch = false
+        mismatch |= length(worlds) != length(reference_worlds)
+        mismatch |= any(zip(reference_worlds, worlds)) do (ref, other)
+            ref_world, ref_prob = ref
+            other_world, other_prob = other
+            !isapprox(ref_prob, other_prob, atol=1e-6)
+        end
+        any_mismatch |= mismatch
+        if mismatch
+            printstyled("mismatch on $row_file between $reference_dir and $dir\n"; color=:red)
+            println("$reference_dir/$row_file:")
+            for (world, prob) in reference_worlds
+                println("  $world: $prob")
+            end
+            println("$dir/$row_file:")
+            for (world, prob) in worlds
+                println("  $world: $prob")
+            end
+        else
+            printstyled("no mismatch on $row_file between $reference_dir and $dir\n"; color=:green)
+        end
+    end
+    any_mismatch
+end
+
+
 # Helper function to compute diff timings between actual and expected
 function compute_diff_timings(actual_timings, expected_timings, rows, threshold)
     diff_timings = Dict()
@@ -203,10 +270,11 @@ function table1_cell(strategy, benchmark_name; force=false)
         println("evaluating: $strategy on $benchmark_name")
         res, timing = isnothing(benchmark.run_benchmark) ? run_benchmark(benchmark, strategy) : benchmark.run_benchmark(benchmark, strategy)
         timing
-    end    
+    end
 
     json = Dict(
-        "timing" => timing
+        "timing" => timing,
+        "result" => res
     )
 
     path = "out/table1/$strategy/$benchmark_name.json"

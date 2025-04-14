@@ -47,6 +47,9 @@ table-1-show:
 table-1-diff:
 	julia --project -e "using PluckArtifact; PA.diff_table1(;which=:$(WHICH))"
 
+table-1-check:
+	julia --project -e "using PluckArtifact; PA.diff_results(\"out/table1/ours\", \"out/table1/dice\")"
+
 table-1-sizes:
 	julia --project -e "using PluckArtifact; PA.table1_sizes(;which=:$(WHICH))"
 
