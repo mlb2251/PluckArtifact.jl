@@ -19,8 +19,8 @@ macro bbtime(args...)
             println(
                 "  time=",
                 $BenchmarkTools.time($trialmin)/1e6, " ms",
-                # " mean=",
-                # $BenchmarkTools.time($trialmean)/1e6, " ms",
+                " mean=",
+                $BenchmarkTools.time($trialmean)/1e6, " ms",
                 " (",
                 $trialallocs,
                 " allocation",
