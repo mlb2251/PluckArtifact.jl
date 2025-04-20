@@ -8,7 +8,7 @@ ROW = noisy_or
 WHICH = original
 
 # Whether to use the cached results if this command is run again
-CACHE = true
+CACHE = false
 # Whether to use latex formatting
 LATEX = false
 
