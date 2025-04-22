@@ -104,6 +104,12 @@ figure-4-fuel:
 	julia --project -e "using PluckArtifact; PA.make_fuel_plot()"
 
 
+
+figure-4-plots:
+	julia --project -e "using PluckArtifact; PA.plot_scaling(\"diamond\"); PA.plot_scaling(\"ladder\"); PA.plot_scaling(\"hmm\"); PA.plot_scaling(\"sorted\"); PA.plot_scaling(\"pcfg\")"
+	echo "Made all non-fuel plots"
+
+
 # BASICS
 
 bindings:
