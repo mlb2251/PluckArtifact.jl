@@ -4,7 +4,7 @@
 COL = ours
 # row name from table1 printout
 ROW = noisy_or
-# "original" or "added" where "added" is the new camera-ready benchmarks
+# "original" or "added" where "added" is the appendix table
 WHICH = original
 
 # Whether to use the cached results if this command is run again

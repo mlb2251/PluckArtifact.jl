@@ -15,4 +15,4 @@ noisy_or_example = """
 )
 """
 
-add_benchmark!("noisy_or", "pluck_default", PluckBenchmark(noisy_or_example; kwargs=Dict(:normalize => true)))
+add_benchmark!("noisy_or", "pluck_default", PluckBenchmark(noisy_or_example; normalize=true))

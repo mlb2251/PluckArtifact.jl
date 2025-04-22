@@ -88,5 +88,5 @@ end
 
 make_caesar_example(n) = "(caesar $(julia_string_to_expression_caesar(join("c" for _ in 1:n))))"
 
-add_benchmark!("caesar", "pluck_default", PluckBenchmark(make_caesar_example(100); kwargs=Dict(:normalize => true), pre=caesar_defs))
-add_benchmark!("caesar", "pluck_strict_enum", PluckBenchmark(make_caesar_example(100); kwargs=Dict(:normalize => true), pre=caesar_defs, timeout=true))
+add_benchmark!("caesar", "pluck_default", PluckBenchmark(make_caesar_example(100); normalize=true, pre=caesar_defs))
+add_benchmark!("caesar", "pluck_strict_enum", PluckBenchmark(make_caesar_example(100); normalize=true, pre=caesar_defs, timeout=true))

@@ -13,4 +13,4 @@ burglary_example = """
 )
 """
 
-add_benchmark!("burglary", "pluck_default", PluckBenchmark(burglary_example; kwargs=Dict(:normalize => true)))
+add_benchmark!("burglary", "pluck_default", PluckBenchmark(burglary_example; normalize=true))

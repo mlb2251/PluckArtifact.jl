@@ -13,4 +13,4 @@ two_coins_example = """
     (given (not bothHeads) firstCoin))
 """
 
-add_benchmark!("two_coins", "pluck_default", PluckBenchmark(two_coins_example; kwargs=Dict(:normalize => true)))
+add_benchmark!("two_coins", "pluck_default", PluckBenchmark(two_coins_example; normalize=true))

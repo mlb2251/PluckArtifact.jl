@@ -15,4 +15,4 @@ grass_example = """
 )
 """
 
-add_benchmark!("grass", "pluck_default", PluckBenchmark(grass_example; kwargs=Dict(:normalize => true)))
+add_benchmark!("grass", "pluck_default", PluckBenchmark(grass_example; normalize=true))

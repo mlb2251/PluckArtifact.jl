@@ -178,7 +178,7 @@ function compute_diff_timings(actual_timings, expected_timings, rows, threshold)
                 pct_diff = 100.0 * abs_diff / expected
                 
                 # Format the difference with color if above threshold
-                diff_str = @sprintf("%+.1f%% (%.1f)", pct_diff, actual)
+                diff_str = @sprintf("%+.1f%% (%.2f)", pct_diff, actual)
                 
                 if abs(pct_diff) > threshold * 100
                     color = pct_diff > 0 ? :red : :green
