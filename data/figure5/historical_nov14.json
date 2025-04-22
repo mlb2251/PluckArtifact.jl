@@ -5,7 +5,7 @@
                 "task": "all",
                 "yticks": [0, 100, 200, 300, 400, 500, 600, 700],
                 "ymax": 700,
-                "title": "Fuzzing Evaluation",
+                "title": "Evaluation on Randomly Generated Programs",
                 "height": 300,
                 "perp1": {
                     "title": "Synthesis Tasks Within 10% of Ground Truth Inverse Perplexity",

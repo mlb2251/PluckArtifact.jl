@@ -117,6 +117,14 @@ function show_results(group) {
         "dice": "black"
     }
 
+    // Define markers for each strategy
+    let marker_of_strategy = {
+        "bdd": "star", // 5-pointed star for Ours (Exact)
+        "smc": "diamond", // diamond for Ours (SMC) (Approximate)
+        "lazy": "triangle", // triangle for Lazy Enumeration
+        "dice": "circle" // circle for Dice.jl
+    }
+
     strategies.sort((a, b) => order.indexOf(a) - order.indexOf(b))
 
     // let strategies = ["bdd"]
@@ -249,21 +257,23 @@ function show_results(group) {
         .attr("transform", `translate(200, 100)`)
     g_graph.append("g")
         .attr("transform", `translate(0, ${graph_height})`)
-        .call(d3.axisBottom(x_scale));
+        .call(d3.axisBottom(x_scale).tickValues(d3.range(0, tinfos.length + 1, 100)))
+        .selectAll("text")  // Select all text elements in the x-axis
+        .style("font-size", "16px");  // Increased from 14px to 16px
     let leftaxis = d3.axisLeft(y_scale)
     if (group.config.yticks) {
         leftaxis.tickValues(group.config.yticks)
     }
     g_graph.append("g")
-        .call(leftaxis
-            // .tickValues([0,1,2,3,4,5,6,7])
-        );
+        .call(leftaxis)
+        .selectAll("text")  // Select all text elements in the y-axis
+        .style("font-size", "16px");  // Matched to x-axis font size
 
     // x axis label
     g_graph.append("text")
         .attr("x", graph_width / 2)
         .attr("y", graph_height + 60)
-        .style("font", "18px sans-serif")
+        .style("font", "22px sans-serif")  // Increased from 18px to 22px
         .style("text-anchor", "middle")
         .text("Programs Successfully Evaluated")
 
@@ -271,7 +281,7 @@ function show_results(group) {
     g_graph.append("g")
         .attr("transform", `translate(-60, ${graph_height/2}) rotate(-90)`)
         .append("text")
-        .style("font", "18px sans-serif")
+        .style("font", "22px sans-serif")  // Increased from 18px to 22px
         .style("text-anchor", "middle")
         .text("Cumulative Time (s)")
         // .style("transform", "rotate(-90deg)")
@@ -287,26 +297,122 @@ function show_results(group) {
             .attr("stroke", color_of_strategy[strategy])
             .attr("fill", "none")
             .attr("stroke-width", 4)
+            
+        // Add marker only at the end of the line
+        if (cumulative[strategy].length > 0) {
+            const marker = marker_of_strategy[strategy];
+            const j = cumulative[strategy].length - 1; // Get the last point
+            const x = x_scale(j);
+            const y = y_scale(cumulative[strategy][j]);
+            
+            if (marker === "star") {
+                drawStar(g_graph, x, y, 5, 13.5, 6.75, color_of_strategy[strategy]);
+            } else if (marker === "diamond") {
+                g_graph.append("rect")
+                    .attr("x", x - 9)
+                    .attr("y", y - 9)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .attr("fill", color_of_strategy[strategy])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5)
+                    .attr("transform", `rotate(45, ${x}, ${y})`);
+            } else if (marker === "triangle") {
+                g_graph.append("polygon")
+                    .attr("points", `${x},${y-11.25} ${x-11.25},${y+11.25} ${x+11.25},${y+11.25}`)
+                    .attr("fill", color_of_strategy[strategy])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5);
+            } else if (marker === "circle") {
+                g_graph.append("circle")
+                    .attr("cx", x)
+                    .attr("cy", y)
+                    .attr("r", 9)
+                    .attr("fill", color_of_strategy[strategy])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5);
+            }
+        }
     }
 
     // add a legend
     if (url_params.get("hide_legend") != "true") {
         let legend = g_graph.append("g")
-            .attr("transform", `translate(40, 10)`)
+            .attr("transform", `translate(20, 10)`)
         for (let i = 0; i < strategies.length; i++) {
-            legend.append("rect")
-                .attr("x", 0)
-                .attr("y", i * 20) // Reduced spacing from 25 to 20
-                .attr("width", 15)
-                .attr("height", 15)
-                .attr("fill", color_of_strategy[strategies[i]])
+            const strategy = strategies[i];
+            const marker = marker_of_strategy[strategy];
+            const rowHeight = 30;
+            
+            // Remove color line and only show the marker symbol
+            if (marker === "star") {
+                drawStar(legend, 7.5, i * rowHeight + 7.5, 5, 13.5, 6.75, color_of_strategy[strategy]);
+            } else if (marker === "diamond") {
+                legend.append("rect")
+                    .attr("x", -1.5)
+                    .attr("y", i * rowHeight - 1.5)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .attr("fill", color_of_strategy[strategy])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5)
+                    .attr("transform", `rotate(45, 7.5, ${i * rowHeight + 7.5})`);
+            } else if (marker === "triangle") {
+                legend.append("polygon")
+                    .attr("points", `7.5,${i * rowHeight - 5.25} -5.25,${i * rowHeight + 16.5} 20.25,${i * rowHeight + 16.5}`)
+                    .attr("fill", color_of_strategy[strategy])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5);
+            } else if (marker === "circle") {
+                legend.append("circle")
+                    .attr("cx", 7.5)
+                    .attr("cy", i * rowHeight + 7.5)
+                    .attr("r", 9)
+                    .attr("fill", color_of_strategy[strategy])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5);
+            }
+
             legend.append("text")
                 .attr("x", 20)
-                .attr("y", i * 20 + 10) // Reduced spacing from 25 to 20
-                .text(name_of_strategy[strategies[i]])
-                .style("font", "18px sans-serif")
-                .style("dominant-baseline", "middle")
+                .attr("y", i * rowHeight + 10)
+                .text(name_of_strategy[strategy])
+                .style("font", "20px sans-serif")
+                .style("dominant-baseline", "middle");
         }
+    }
+
+    // Helper function to draw a star
+    function drawStar(parent, cx, cy, spikes, outerRadius, innerRadius, fill) {
+        let points = "";
+        
+        // Use a more precise method to draw a star
+        for (let i = 0; i < spikes; i++) {
+            // Outer point
+            let outerAngle = (Math.PI * 2 * i) / spikes - Math.PI / 2;
+            let outerX = cx + Math.cos(outerAngle) * outerRadius;
+            let outerY = cy + Math.sin(outerAngle) * outerRadius;
+            
+            if (i === 0) {
+                points += "M" + outerX + "," + outerY + " ";
+            } else {
+                points += "L" + outerX + "," + outerY + " ";
+            }
+            
+            // Inner point
+            let innerAngle = (Math.PI * 2 * i + Math.PI) / spikes - Math.PI / 2;
+            let innerX = cx + Math.cos(innerAngle) * innerRadius;
+            let innerY = cy + Math.sin(innerAngle) * innerRadius;
+            points += "L" + innerX + "," + innerY + " ";
+        }
+        
+        points += "Z";
+        
+        parent.append("path")
+            .attr("d", points)
+            .attr("fill", fill)
+            .attr("stroke", "white")
+            .attr("stroke-width", 1.5);
     }
 
     // add a title
