@@ -44,11 +44,25 @@ table-1-show:
 	julia --project -e "using PluckArtifact; PA.show_table1(;which=:$(WHICH), latex=$(LATEX))"
 
 # Show the diff between actual and expected table1 results
+AFTER = out/table1
+BEFORE = out/table1_camera_ready_apr23
 table-1-diff:
-	julia --project -e "using PluckArtifact; PA.diff_table1(;which=:$(WHICH))"
+	julia --project -e "using PluckArtifact; PA.diff_table1(;actual_dir=\"$(AFTER)\", expected_dir=\"$(BEFORE)\", which=:$(WHICH))"
+
+table-1-save:
+	cp -r out/table1 out/table1_$(shell date +%Y-%m-%d_%H-%M-%S)
 
 table-1-check:
+	julia --project -e "using PluckArtifact; PA.diff_results(\"$(AFTER)/ours\", \"$(BEFORE)/ours\")"
+
+table-1-check-vs-dice:
 	julia --project -e "using PluckArtifact; PA.diff_results(\"out/table1/ours\", \"out/table1/dice\")"
+
+evaluate:
+	make table-1-col COL=ours
+	make table-1-save
+	make table-1-check
+	make table-1-diff
 
 table-1-sizes:
 	julia --project -e "using PluckArtifact; PA.table1_sizes(;which=:$(WHICH))"
