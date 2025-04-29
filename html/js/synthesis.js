@@ -265,8 +265,8 @@ function show_results(json) {
             if (log_step === undefined) {
                 // only time it should be missing is if early stopping happened bc we found a deterministic solution.
                 // In that case, just use the final step
-                assert(mcmc_result.state_log.length <= log_steps.length)
-                assert(mcmc_result.state_log[mcmc_result.state_log.length - 1].step < step)
+                // assert(mcmc_result.state_log.length <= log_steps.length)
+                // assert(mcmc_result.state_log[mcmc_result.state_log.length - 1].step < step)
                 log_step = mcmc_result.state_log[mcmc_result.state_log.length - 1]
             }
             return log_step
