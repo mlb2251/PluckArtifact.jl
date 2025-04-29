@@ -97,13 +97,13 @@ function show_results(group) {
     let strategies = Object.keys(tinfos[0].res)
     console.log(strategies)
 
-    let order = ["smc", "bdd", "lazy", "strict", "special", "dice"]
+    let order = ["bdd", "lazy", "dice", "smc", "strict", "special"]
 
     let name_of_strategy = {
         "bdd": "Ours (Exact)",
-        "lazy": "Lazy Enumeration",
+        "lazy": "Lazy Enum",
         "strict": "Strict Enumeration",
-        "smc": "Ours (SMC) (Approximate)",
+        "smc": "Ours (SMC) (Approx.)",
         "special": "Special one-off",
         "dice": "Dice.jl"
     }
@@ -259,7 +259,7 @@ function show_results(group) {
         .attr("transform", `translate(0, ${graph_height})`)
         .call(d3.axisBottom(x_scale).tickValues(d3.range(0, tinfos.length + 1, 100)))
         .selectAll("text")  // Select all text elements in the x-axis
-        .style("font-size", "16px");  // Increased from 14px to 16px
+        .style("font-size", "18px");  // Increased from 16px to 18px
     let leftaxis = d3.axisLeft(y_scale)
     if (group.config.yticks) {
         leftaxis.tickValues(group.config.yticks)
@@ -267,7 +267,7 @@ function show_results(group) {
     g_graph.append("g")
         .call(leftaxis)
         .selectAll("text")  // Select all text elements in the y-axis
-        .style("font-size", "16px");  // Matched to x-axis font size
+        .style("font-size", "18px");  // Increased from 16px to 18px
 
     // x axis label
     g_graph.append("text")
@@ -286,11 +286,36 @@ function show_results(group) {
         .text("Cumulative Time (s)")
         // .style("transform", "rotate(-90deg)")
 
+    // Draw curves in specific order: others first, then smc, then bdd (so bdd is on top)
+    // First draw Dice
+    if (strategies.includes('dice') && cumulative['dice'].length > 0) {
+        let curve = g_graph.append("path")
+            .datum(cumulative['dice'].map((x, j) => [x_scale(j), y_scale(x)]))
+            .attr("d", d3.line().x(d => d[0]).y(d => d[1]))
+            .attr("stroke", color_of_strategy['dice'])
+            .attr("fill", "none")
+            .attr("stroke-width", 4)
+            
+        // Add marker at the end
+        const j = cumulative['dice'].length - 1;
+        const x = x_scale(j);
+        const y = y_scale(cumulative['dice'][j]);
+        
+        g_graph.append("circle")
+            .attr("cx", x)
+            .attr("cy", y)
+            .attr("r", 9)
+            .attr("fill", color_of_strategy['dice'])
+            .attr("stroke", "white")
+            .attr("stroke-width", 1.5);
+    }
+    
+    // Then draw all other strategies except bdd, smc, and dice
     for (let i = 0; i < strategies.length; i++) {
         let strategy = strategies[i]
-        if (cumulative[strategy].length == 0) continue
-        // console.log(strategy)
-        // console.log(cumulative[strategy])
+        if (strategy === 'bdd' || strategy === 'smc' || strategy === 'dice') continue; // Skip bdd, smc, and dice
+        if (cumulative[strategy].length == 0) continue;
+        
         let curve = g_graph.append("path")
             .datum(cumulative[strategy].map((x, j) => [x_scale(j), y_scale(x)]))
             .attr("d", d3.line().x(d => d[0]).y(d => d[1]))
@@ -305,34 +330,58 @@ function show_results(group) {
             const x = x_scale(j);
             const y = y_scale(cumulative[strategy][j]);
             
-            if (marker === "star") {
-                drawStar(g_graph, x, y, 5, 13.5, 6.75, color_of_strategy[strategy]);
-            } else if (marker === "diamond") {
-                g_graph.append("rect")
-                    .attr("x", x - 9)
-                    .attr("y", y - 9)
-                    .attr("width", 18)
-                    .attr("height", 18)
-                    .attr("fill", color_of_strategy[strategy])
-                    .attr("stroke", "white")
-                    .attr("stroke-width", 1.5)
-                    .attr("transform", `rotate(45, ${x}, ${y})`);
-            } else if (marker === "triangle") {
-                g_graph.append("polygon")
-                    .attr("points", `${x},${y-11.25} ${x-11.25},${y+11.25} ${x+11.25},${y+11.25}`)
-                    .attr("fill", color_of_strategy[strategy])
-                    .attr("stroke", "white")
-                    .attr("stroke-width", 1.5);
-            } else if (marker === "circle") {
-                g_graph.append("circle")
-                    .attr("cx", x)
-                    .attr("cy", y)
-                    .attr("r", 9)
-                    .attr("fill", color_of_strategy[strategy])
-                    .attr("stroke", "white")
-                    .attr("stroke-width", 1.5);
+            if (marker) {
+                if (marker === "triangle") {
+                    g_graph.append("polygon")
+                        .attr("points", `${x},${y-11.25} ${x-11.25},${y+11.25} ${x+11.25},${y+11.25}`)
+                        .attr("fill", color_of_strategy[strategy])
+                        .attr("stroke", "white")
+                        .attr("stroke-width", 1.5);
+                }
             }
         }
+    }
+    
+    // Then draw 'smc' (approx) second to last
+    if (strategies.includes('smc') && cumulative['smc'].length > 0) {
+        let curve = g_graph.append("path")
+            .datum(cumulative['smc'].map((x, j) => [x_scale(j), y_scale(x)]))
+            .attr("d", d3.line().x(d => d[0]).y(d => d[1]))
+            .attr("stroke", color_of_strategy['smc'])
+            .attr("fill", "none")
+            .attr("stroke-width", 4)
+            
+        // Add marker at the end
+        const j = cumulative['smc'].length - 1;
+        const x = x_scale(j);
+        const y = y_scale(cumulative['smc'][j]);
+        
+        g_graph.append("rect")
+            .attr("x", x - 9)
+            .attr("y", y - 9)
+            .attr("width", 18)
+            .attr("height", 18)
+            .attr("fill", color_of_strategy['smc'])
+            .attr("stroke", "white")
+            .attr("stroke-width", 1.5)
+            .attr("transform", `rotate(45, ${x}, ${y})`);
+    }
+    
+    // Finally draw 'bdd' (exact) last so it's on top
+    if (strategies.includes('bdd') && cumulative['bdd'].length > 0) {
+        let curve = g_graph.append("path")
+            .datum(cumulative['bdd'].map((x, j) => [x_scale(j), y_scale(x)]))
+            .attr("d", d3.line().x(d => d[0]).y(d => d[1]))
+            .attr("stroke", color_of_strategy['bdd'])
+            .attr("fill", "none")
+            .attr("stroke-width", 4)
+            
+        // Add marker at the end
+        const j = cumulative['bdd'].length - 1;
+        const x = x_scale(j);
+        const y = y_scale(cumulative['bdd'][j]);
+        
+        drawStar(g_graph, x, y, 5, 13.5, 6.75, color_of_strategy['bdd']);
     }
 
     // add a legend

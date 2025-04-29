@@ -78,7 +78,7 @@ function show_results(json) {
     window.json = json
     console.log(json)
     let runs = json.runs
-    let order = ["smc", "bdd", "lazy", "strict", "special", "dice"]
+    let order = ["bdd", "lazy", "dice", "smc", "strict", "special"]
     runs.sort((a, b) => order.indexOf(a.mode) - order.indexOf(b.mode))
 
 
@@ -398,16 +398,55 @@ function show_results(json) {
         }
         let name_of_strategy = {
             "bdd": "Ours (Exact)",
-            "lazy": "Lazy Enumeration",
+            "lazy": "Lazy Enum",
             "strict": "Strict Enumeration",
-            "smc": "Ours (SMC) (Approximate)",
+            "smc": "Ours (SMC) (Approx.)",
             "special": "Special one-off",
             "dice": "Dice.jl"
         }
 
+        // Define markers for each strategy (same as in fuzzing.js)
+        let marker_of_strategy = {
+            "bdd": "star", // 5-pointed star for Ours (Exact)
+            "smc": "diamond", // diamond for Ours (SMC) (Approximate)
+            "lazy": "triangle", // triangle for Lazy Enumeration
+            "dice": "circle" // circle for Dice.jl
+        }
 
         let strategy_of_j = runs.map(r => r.mode)
 
+        // Function to add markers to the end of lines
+        function addMarkerToLine(j, g, x, y) {
+            const marker = marker_of_strategy[strategy_of_j[j]];
+            
+            if (marker === "star") {
+                drawStar(g, x, y, 5, 13.5, 6.75, color_of_strategy[strategy_of_j[j]]);
+            } else if (marker === "diamond") {
+                g.append("rect")
+                    .attr("x", x - 9)
+                    .attr("y", y - 9)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .attr("fill", color_of_strategy[strategy_of_j[j]])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5)
+                    .attr("transform", `rotate(45, ${x}, ${y})`);
+            } else if (marker === "triangle") {
+                g.append("polygon")
+                    .attr("points", `${x},${y-11.25} ${x-11.25},${y+11.25} ${x+11.25},${y+11.25}`)
+                    .attr("fill", color_of_strategy[strategy_of_j[j]])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5);
+            } else if (marker === "circle") {
+                g.append("circle")
+                    .attr("cx", x)
+                    .attr("cy", y)
+                    .attr("r", 9)
+                    .attr("fill", color_of_strategy[strategy_of_j[j]])
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 1.5);
+            }
+        }
 
         let no_gt_train_hit_limit = done_tasks.filter(dtask => !dtask.task_info.train_hit_limit)
         console.log("no gt train hit limit:", no_gt_train_hit_limit.length / done_tasks.length * 100 + "%")
@@ -471,10 +510,14 @@ function show_results(json) {
                 xmax: subset.length * num_repetitions, // maybe a little confusing that we cant include ones we cant calculate it for
                 ymin: 0.,
                 ymax: cfg.ymax || max_time*1.1,
-                legend: count(jsons.length).map(j => ({
-                    "name": name_of_strategy[strategy_of_j[j]],
-                    "color": color_of_strategy[strategy_of_j[j]]
-                }))
+                yticks: cfg.yticks || [0, 10000, 20000, 30000, 40000, 50000], // Set y-axis ticks to intervals of 10k, stopping at 50k
+                legend: order
+                    .filter(strategy => runs.some(r => r.mode === strategy))
+                    .map(strategy => ({
+                        "name": name_of_strategy[strategy],
+                        "color": color_of_strategy[strategy],
+                        "marker": marker_of_strategy[strategy]
+                    }))
             }
 
             // Append a new SVG to the body
@@ -488,15 +531,82 @@ function show_results(json) {
 
             graph.y_label.attr("transform", `translate(0, -20)`)
 
-
+            // Draw strategies in specific order, so BDD is on top, followed by SMC, then others
+            // First draw Dice (at the bottom)
             for (let j = 0; j < jsons.length; j++) {
+                if (strategy_of_j[j] !== "dice") continue;
+                
                 let curve = plot_curve(graph, {
                     xs: train_series[j].map((_, i) => i),
                     ys: train_series[j],
                     color: color_of_strategy[strategy_of_j[j]]
-                })
+                });
+                
+                // Add marker at the end of the line
+                if (train_series[j].length > 0) {
+                    const lastIdx = train_series[j].length - 1;
+                    const lastX = graph.xScale(lastIdx);
+                    const lastY = graph.yScale(train_series[j][lastIdx]);
+                    addMarkerToLine(j, graph.g, lastX, lastY);
+                }
             }
-
+            
+            // Then draw other strategies except bdd, smc, and dice
+            for (let j = 0; j < jsons.length; j++) {
+                if (strategy_of_j[j] === "bdd" || strategy_of_j[j] === "smc" || strategy_of_j[j] === "dice") continue;
+                
+                let curve = plot_curve(graph, {
+                    xs: train_series[j].map((_, i) => i),
+                    ys: train_series[j],
+                    color: color_of_strategy[strategy_of_j[j]]
+                });
+                
+                // Add marker at the end of the line
+                if (train_series[j].length > 0) {
+                    const lastIdx = train_series[j].length - 1;
+                    const lastX = graph.xScale(lastIdx);
+                    const lastY = graph.yScale(train_series[j][lastIdx]);
+                    addMarkerToLine(j, graph.g, lastX, lastY);
+                }
+            }
+            
+            // Then draw SMC (Approx)
+            for (let j = 0; j < jsons.length; j++) {
+                if (strategy_of_j[j] !== "smc") continue;
+                
+                let curve = plot_curve(graph, {
+                    xs: train_series[j].map((_, i) => i),
+                    ys: train_series[j],
+                    color: color_of_strategy[strategy_of_j[j]]
+                });
+                
+                // Add marker at the end of the line
+                if (train_series[j].length > 0) {
+                    const lastIdx = train_series[j].length - 1;
+                    const lastX = graph.xScale(lastIdx);
+                    const lastY = graph.yScale(train_series[j][lastIdx]);
+                    addMarkerToLine(j, graph.g, lastX, lastY);
+                }
+            }
+            
+            // Finally draw BDD (Exact) on top
+            for (let j = 0; j < jsons.length; j++) {
+                if (strategy_of_j[j] !== "bdd") continue;
+                
+                let curve = plot_curve(graph, {
+                    xs: train_series[j].map((_, i) => i),
+                    ys: train_series[j],
+                    color: color_of_strategy[strategy_of_j[j]]
+                });
+                
+                // Add marker at the end of the line
+                if (train_series[j].length > 0) {
+                    const lastIdx = train_series[j].length - 1;
+                    const lastX = graph.xScale(lastIdx);
+                    const lastY = graph.yScale(train_series[j][lastIdx]);
+                    addMarkerToLine(j, graph.g, lastX, lastY);
+                }
+            }
         }
 
         let graph_spec = {
@@ -548,29 +658,116 @@ function show_results(json) {
             spec.ymax = cfg.ymax || gtp_nonzero * 1.1
             spec.xmax = cfg.xmax || jsons.map((json, j) => xs_series[j][xs_series[j].length-1]).reduce((a, b) => Math.max(a, b), 0) + 5
             spec.yticks = cfg.yticks || undefined
+            spec.legend = order
+                .filter(strategy => runs.some(r => r.mode === strategy))
+                .map(strategy => ({
+                    "name": name_of_strategy[strategy],
+                    "color": color_of_strategy[strategy],
+                    "marker": marker_of_strategy[strategy]
+                }))
 
             let graph = makeGraph(spec);
 
             // move legend
             graph.legend.attr("transform", `translate(${cfg.legend_x || spec.width*.6}, ${cfg.legend_y || spec.height*.7})`)
-            // plot a horizontal line at gt invperplexity no limit hit
+            
+            // Draw strategies in this order:
+            // 1. Dice.jl (at the bottom)
+            // 2. Other strategies except bdd, smc, dice
+            // 3. SMC (Approx)
+            // 4. BDD (Exact) (on top)
+            
+            // First draw Dice.jl
+            for (let j = 0; j < jsons.length; j++) {
+                if (strategy_of_j[j] !== "dice") continue;
+                
+                let curve = plot_curve(graph, {
+                    xs: xs_series[j],
+                    ys: train_series[j],
+                    color: color_of_strategy[strategy_of_j[j]]
+                });
+                
+                // Add marker at the end of the line
+                if (xs_series[j].length > 0) {
+                    const lastIdx = xs_series[j].length - 1;
+                    const lastX = graph.xScale(xs_series[j][lastIdx]);
+                    const lastY = graph.yScale(train_series[j][lastIdx]);
+                    addMarkerToLine(j, graph.g, lastX, lastY);
+                }
+            }
+            
+            // Then draw other strategies (lazy, strict, special)
+            for (let j = 0; j < jsons.length; j++) {
+                // Skip bdd, smc, and dice strategies
+                if (strategy_of_j[j] === "dice" || 
+                    strategy_of_j[j] === "bdd" || 
+                    strategy_of_j[j] === "smc") continue;
+                
+                let curve = plot_curve(graph, {
+                    xs: xs_series[j],
+                    ys: train_series[j],
+                    color: color_of_strategy[strategy_of_j[j]]
+                });
+                
+                // Add marker at the end of the line
+                if (xs_series[j].length > 0) {
+                    const lastIdx = xs_series[j].length - 1;
+                    const lastX = graph.xScale(xs_series[j][lastIdx]);
+                    const lastY = graph.yScale(train_series[j][lastIdx]);
+                    addMarkerToLine(j, graph.g, lastX, lastY);
+                }
+            }
+            
+            // Now plot the ground truth line
             let gt_line_nonzero = plot_curve(graph, {
                 xs: [0, spec.xmax],
                 ys: [gtp_nonzero, gtp_nonzero],
                 color: "black",
                 styles: { "stroke-dasharray": "5,5" }
-            })
+            });
+            
             // text right above it on the righthand side saying "Ground Truth"
             graph.g.append("text")
                 .attr("transform", `translate(${spec.width-120}, ${graph.yScale(gtp_nonzero)-10})`)
-                .text("Ground Truth")
-
+                .style("font", "20px sans-serif")
+                .text("Ground Truth");
+                
+            // Draw SMC (approximate)
             for (let j = 0; j < jsons.length; j++) {
+                if (strategy_of_j[j] !== "smc") continue;
+                
                 let curve = plot_curve(graph, {
                     xs: xs_series[j],
                     ys: train_series[j],
                     color: color_of_strategy[strategy_of_j[j]]
-                })
+                });
+                
+                // Add marker at the end of the line
+                if (xs_series[j].length > 0) {
+                    const lastIdx = xs_series[j].length - 1;
+                    const lastX = graph.xScale(xs_series[j][lastIdx]);
+                    const lastY = graph.yScale(train_series[j][lastIdx]);
+                    addMarkerToLine(j, graph.g, lastX, lastY);
+                }
+            }
+            
+            // Finally draw BDD (exact) on top
+            for (let j = 0; j < jsons.length; j++) {
+                if (strategy_of_j[j] !== "bdd") continue;
+                
+                let curve = plot_curve(graph, {
+                    xs: xs_series[j],
+                    ys: train_series[j],
+                    color: color_of_strategy[strategy_of_j[j]]
+                });
+                
+                // Add marker at the end of the line
+                if (xs_series[j].length > 0) {
+                    const lastIdx = xs_series[j].length - 1;
+                    const lastX = graph.xScale(xs_series[j][lastIdx]);
+                    const lastY = graph.yScale(train_series[j][lastIdx]);
+                    addMarkerToLine(j, graph.g, lastX, lastY);
+                }
             }
         }
 
@@ -580,6 +777,3 @@ function show_results(json) {
 
     })
 }
-
-
-

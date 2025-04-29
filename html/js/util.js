@@ -59,7 +59,7 @@ function makeGraph(spec) {
     let x_label = graph.append("text")
         .attr("x", spec.width / 2)
         .attr("y", spec.height + 60)
-        .style("font", "18px sans-serif")
+        .style("font", "22px sans-serif")
         .style("text-anchor", "middle")
         .text(spec.x_label)
 
@@ -67,7 +67,7 @@ function makeGraph(spec) {
     let y_label = graph.append("g")
         .attr("transform", `translate(-60, ${spec.height/2}) rotate(-90)`)
         .append("text")
-        .style("font", "18px sans-serif")
+        .style("font", "22px sans-serif")
         .style("text-anchor", "middle")
         .text(spec.y_label)
     
@@ -83,20 +83,71 @@ function makeGraph(spec) {
     // add a legend
     if (spec.legend) {
         legend = graph.append("g")
-            .attr("transform", `translate(40, 10)`)
+            .attr("transform", `translate(20, 10)`)
         for (let i = 0; i < spec.legend.length; i++) {
-            legend.append("rect")
-                .attr("x", 0)
-                .attr("y", i * 20) // Reduced spacing from 25 to 20
-                .attr("width", 15)
-                .attr("height", 15)
-                .attr("fill", spec.legend[i].color)
+            const rowHeight = 30;
+            const marker = spec.legend[i].marker;
+            const color = spec.legend[i].color;
+            
+            if (marker) {
+                if (marker === "star") {
+                    if (typeof drawStar === 'function') {
+                        drawStar(legend, 7.5, i * rowHeight + 7.5, 5, 13.5, 6.75, color);
+                    } else {
+                        legend.append("rect")
+                            .attr("x", 0)
+                            .attr("y", i * rowHeight)
+                            .attr("width", 15)
+                            .attr("height", 15)
+                            .attr("fill", color);
+                    }
+                } else if (marker === "diamond") {
+                    legend.append("rect")
+                        .attr("x", -1.5)
+                        .attr("y", i * rowHeight - 1.5)
+                        .attr("width", 18)
+                        .attr("height", 18)
+                        .attr("fill", color)
+                        .attr("stroke", "white")
+                        .attr("stroke-width", 1.5)
+                        .attr("transform", `rotate(45, 7.5, ${i * rowHeight + 7.5})`);
+                } else if (marker === "triangle") {
+                    legend.append("polygon")
+                        .attr("points", `7.5,${i * rowHeight - 5.25} -5.25,${i * rowHeight + 16.5} 20.25,${i * rowHeight + 16.5}`)
+                        .attr("fill", color)
+                        .attr("stroke", "white")
+                        .attr("stroke-width", 1.5);
+                } else if (marker === "circle") {
+                    legend.append("circle")
+                        .attr("cx", 7.5)
+                        .attr("cy", i * rowHeight + 7.5)
+                        .attr("r", 9)
+                        .attr("fill", color)
+                        .attr("stroke", "white")
+                        .attr("stroke-width", 1.5);
+                } else {
+                    legend.append("rect")
+                        .attr("x", 0)
+                        .attr("y", i * rowHeight)
+                        .attr("width", 15)
+                        .attr("height", 15)
+                        .attr("fill", color);
+                }
+            } else {
+                legend.append("rect")
+                    .attr("x", 0)
+                    .attr("y", i * rowHeight)
+                    .attr("width", 15)
+                    .attr("height", 15)
+                    .attr("fill", color);
+            }
+            
             legend.append("text")
                 .attr("x", 20)
-                .attr("y", i * 20 + 10) // Reduced spacing from 25 to 20
+                .attr("y", i * rowHeight + 10)
                 .text(spec.legend[i].name)
-                .style("font", "18px sans-serif")
-                .style("dominant-baseline", "middle")
+                .style("font", "20px sans-serif")
+                .style("dominant-baseline", "middle");
         }
     }
     
@@ -137,9 +188,6 @@ function plot_curve(graph, spec) {
     }
     return path
 }
-
-
-
 
 function show_prob(prob, digits = 0) {
     if (prob == 0)
@@ -325,11 +373,44 @@ function exp2(x) {
     return Math.pow(2, x);
 }
 function showN(x, digits = 2) {
-    if (x > 10)
-        return x.toFixed(0) // eg 1234234
-    if (x > 1)
-        return x.toFixed(1) // eg 4.3
-    return x.toPrecision(digits) // eg 1.2e-3
+    if (x == 0)
+        return "0"
+    if (Math.abs(x) >= 1000 || Math.abs(x) <= .001)
+        return x.toExponential(digits)
+    return x.toPrecision(digits+1)
+}
+
+// Helper function to draw a star
+function drawStar(parent, cx, cy, spikes, outerRadius, innerRadius, fill) {
+    let points = "";
+    
+    // Use a more precise method to draw a star
+    for (let i = 0; i < spikes; i++) {
+        // Outer point
+        let outerAngle = (Math.PI * 2 * i) / spikes - Math.PI / 2;
+        let outerX = cx + Math.cos(outerAngle) * outerRadius;
+        let outerY = cy + Math.sin(outerAngle) * outerRadius;
+        
+        if (i === 0) {
+            points += "M" + outerX + "," + outerY + " ";
+        } else {
+            points += "L" + outerX + "," + outerY + " ";
+        }
+        
+        // Inner point
+        let innerAngle = (Math.PI * 2 * i + Math.PI) / spikes - Math.PI / 2;
+        let innerX = cx + Math.cos(innerAngle) * innerRadius;
+        let innerY = cy + Math.sin(innerAngle) * innerRadius;
+        points += "L" + innerX + "," + innerY + " ";
+    }
+    
+    points += "Z";
+    
+    parent.append("path")
+        .attr("d", points)
+        .attr("fill", fill)
+        .attr("stroke", "white")
+        .attr("stroke-width", 1.5);
 }
 
 const url_params = new URLSearchParams(window.location.search)
