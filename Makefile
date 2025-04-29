@@ -40,6 +40,19 @@ figure-5-right-show:
 figure-5-right-line:
 	julia --project -t$(THREADS) -e "using PluckArtifact; PA.figure5_right_single(:$(STRATEGY); truncate=$(RIGHT_TRUNCATE), mcmc_steps=$(RIGHT_STEPS), time_limit=$(RIGHT_TIMELIMIT))"
 
+evaluate:
+	make figure-5-left-line STRATEGY=bdd
+	make figure-5-right-line STRATEGY=bdd
+	python3 -m webbrowser "http://localhost:8001/html/fuzzing.html?path=data_to_plot/figure5-left/fuzzing_result.json"
+	python3 -m webbrowser "http://localhost:8001/html/synthesis.html?path=data_to_plot/figure5-right/synthesis_result.json"
+
+evaluate-full:
+	make figure-5-left
+	make figure-5-right
+	python3 -m webbrowser "http://localhost:8001/html/fuzzing.html?path=data_to_plot/figure5-left/fuzzing_result.json"
+	python3 -m webbrowser "http://localhost:8001/html/synthesis.html?path=data_to_plot/figure5-right/synthesis_result.json"
+
+
 # BASICS
 
 bindings:
