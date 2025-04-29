@@ -1,7 +1,120 @@
-using Pluck
 
-include("examples.jl")
 include("dice.jl")
+include("seq_grammars.jl")
+
+using JSON: JSON
+using Dates: Dates
+using ProgressBars
+using Random
+
+Base.@kwdef struct GroupConfig
+    config = nothing
+    tasks::Vector{PTask} = []
+    task_info::Vector{Dict} = []
+    repetitions::Int = 1
+    out::String = joinpath(timestamp_dir(), "expt")
+    verbose::Bool = false
+    publish::Bool = false
+    warmstart::Bool = true
+    warmstart_only::Bool = false
+    is_warmstart::Bool = false
+end
+JSON.lower(x::GroupConfig) = Dict(:num_tasks => length(x.tasks), :repetitions => x.repetitions, :config => x.config)
+Base.show(io::IO, x::GroupConfig) = print(io, "GroupConfig($(length(x.tasks)), $(x.repetitions), $(x.config))")
+
+function Pluck.warmstart_config(x::GroupConfig)
+    GroupConfig(
+        warmstart_config(x.config),
+        x.tasks[1:min(3, length(x.tasks))],
+        x.task_info[1:min(3, length(x.task_info))],
+        1, # repetitions
+        joinpath("out/warmstart/", x.out),
+        false,
+        false,
+        false,
+        false,
+        true,
+    )
+end
+
+function solve_tasks(config::GroupConfig)
+
+    if config.warmstart
+        printstyled("WARMSTARTING\n", color = :yellow)
+        solve_tasks(warmstart_config(config))
+        printstyled("WARMSTARTING DONE\n", color = :yellow)
+        config.warmstart_only && return
+    end
+
+    config.is_warmstart || printstyled("STARTING\n", color = :green)
+
+    summary = new_summary(config)
+    config.is_warmstart || printstyled("Solving $(length(config.tasks)) tasks $(config.repetitions) times each with $(Threads.nthreads()) threads\n", color = :blue)
+    config.is_warmstart || printstyled(summary_address(summary); color = :yellow)
+    config.is_warmstart || println("")
+
+    # shuffle workloads for hopes of more even distribution over cpus
+    num_workloads = length(config.tasks) * config.repetitions
+    workloads::Vector{Tuple{Int, Int}} = collect(enumerate(1:num_workloads))
+    progress = ProgressBar(workloads)
+
+    tstart = time()
+
+
+    tdds = [TimeDataDict() for _ in 1:length(workloads)]
+    function process(idx, i_j)
+        task_idx = (i_j - 1) ÷ config.repetitions + 1
+        rep_idx = (i_j - 1) % config.repetitions + 1
+        task = config.tasks[task_idx]
+        try
+            stub = copy(summary[:init_stubs_of_task][task_idx][rep_idx])
+            config.verbose && println("[$(task.name) $rep_idx] Starting")
+            res = solve_task(config.config, task)
+            config.verbose && println("[$(task.name) $rep_idx] Done")
+            tdd = tdds[idx]
+            for r in res
+                add_timing_data!(tdd, r.tdd)
+            end
+            config.verbose && is_solved(res) && printstyled("[$(task.name) $rep_idx] solved\n", color = :green)
+            write_out(res, joinpath(stub[:out], stub[:path]); browser_path = html_path(config.config), verbose = config.verbose)
+            write_stub(finish_stub!(res, stub); publish = config.publish, verbose = config.verbose)
+            config.verbose && println(summary_address(summary))
+            config.verbose && println("") # necessary bc the next printed line will get eaten by the progress bar
+        catch e
+            print("[$(task.name) $rep_idx] ERROR: ")
+            showerror(stdout, e)
+            println()
+            println()
+            Pluck.SINGLE_THREAD && rethrow()
+            e isa InterruptException && rethrow()
+        end
+    end
+
+    if !Pluck.SINGLE_THREAD && config.config isa MCMCConfig
+        Threads.@threads :greedy for idx__i_j in progress
+            process(idx__i_j[1], idx__i_j[2])
+        end
+    else
+        for (idx, i_j) in progress
+            process(idx, i_j)
+        end
+    end
+
+    tdd = TimeDataDict()
+    for tdd_inner in tdds
+        add_timing_data!(tdd, tdd_inner)
+    end
+
+    dt = time() - tstart
+    println("dt: ", round(Int, dt), "s")
+    println(tdd)
+    summary[:tdd] = string(tdd)
+    summary[:dt] = dt
+    write_out(summary, joinpath(config.out, summary[:summary_path]); browser_path = "html/summary.html", publish = config.publish, verbose = config.verbose)
+    config.is_warmstart || !config.publish || println("View results at ", summary_address(summary))
+
+    return summary
+end
 
 struct TaskDist
     grammar::Grammar
@@ -296,18 +409,6 @@ function fuzz(gen_file, mode; truncate=10, time_limit=1.0, max_depth=1000)
     return file
 end
 
-function grammar_of_task(task)
-    Dict(
-        "cIID-Gen" => map_unit_grammar_any_length,
-        "cIID-IO" => map_int_grammar_anylength,
-        "Markov-Gen" => scanl_unit_grammar_any_length,
-        "Markov-IO" => scanl_int_grammar_anylength,
-        "HMM-Gen" => map_scanl_unit_grammar_any_length,
-        "HMM-Gen-IO" => map_scanl_int_grammar_anylength,
-    )[task](;nats=true, lets=true)
-end
-
-
 function synth(eval_file, mode, task; max_depth=1000, temperature=1.0, mcmc_steps=1000, repetitions=1, time_limit=0.05, truncate=8)
     task_dist = grammar_of_task(task)
     evaluate_solution = full_evaluate_solution
@@ -332,7 +433,6 @@ function fuzzing_evaluation(dataset_path; time_limit=3.0, truncate=nothing, max_
         JSON.parse(f)
     end
 
-    # TEMPORARY
     if !isnothing(truncate)
         dataset_json["tasks"] = dataset_json["tasks"][1:truncate]
         dataset_json["task_info"] = dataset_json["task_info"][1:truncate]
@@ -375,53 +475,7 @@ function fuzzing_evaluation(dataset_path; time_limit=3.0, truncate=nothing, max_
     return file
 end
 
-function test_mcmc(eval_file, task_dist; modes=[:bdd, :lazy, :smc, :dice], max_depth=1000, temperature=1.0, mcmc_steps=1000, repetitions=3, time_limit=0.05, truncate=nothing)
-    evaluate_solution = full_evaluate_solution
-    results = Dict()
-    for mode in modes
-        kwargs_of_task = task -> (; time_limit, max_depth, state_vars=StateVars(; fuel=autofuel(task)))
-        eval_builder = make_tc(mode; kwargs_of_task, temperature, )
-        cfg = MCMCConfig(; steps=mcmc_steps, pcfg=task_dist.grammar, eval_builder, evaluate_solution)
-        println("Running MCMC with $mode")
-        GC.gc()
-        # println("Memory usage before MCMC: $(mem_usage_mb()) MB")
-        summary = mcmc_eval(cfg, eval_file; repetitions, truncate)
-        addr = summary_address(summary)
-        printstyled("  $mode: $addr\n", color=:green)
-        results[mode] = addr
-
-        outpath = joinpath(summary[:out], "summary.json")
-
-        printstyled("""
-        {
-            "mode": "$mode",
-            "path": "$outpath"
-        },
-        """, color=:yellow)
-
-        summary = nothing # for GC
-    end
-    return results
-end
-
-function mem_usage_mb()
-    pid = getpid()
-    if Sys.isunix()
-        # Get RSS and VSZ for the current process
-        cmd = `ps -o rss=,vsz= -p $pid`
-        output = read(cmd, String)
-        rss, vsz = parse.(Int, split(strip(output)))
-        return rss ÷ 1024
-    else
-        # Fallback for non-Unix systems
-        # return Base.gc_num()
-        # @warn "Memory usage not supported on non-Unix systems"
-        return 0
-    end
-end
-
 function mcmc_eval(cfg, dataset_path; repetitions=3, warmstart=true, truncate=nothing)
-    # Pluck.SINGLE_THREAD = true
     dataset_json = open(dataset_path) do f
         JSON.parse(f)
     end
@@ -464,362 +518,4 @@ function full_evaluate_solution(expr, task)
         end
     end
     return train_res, test_res
-end
-
-function default_input_dist(input_type::String)
-    Dict(
-        "list" => "(fillrand $(make_uniform_nat(6)))",
-        "int" => "(make_random_digit)",
-        "bool" => "(flip 0.5)",
-        "unit" => "(Unit)",
-    )[input_type]
-end
-
-
-function map_unit_grammar(; length=10, nats=true, kwargs...)
-    start = "(mapunit (λx -> $(nats ? "randnat" : "make_random_digit")) $length)"
-    grammar_start = "(mapunit (λx -> ?int) $length)"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "unit",
-        "list",
-        "(Unit)",
-        (_) -> true,
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-function map_int_grammar(; length=10, nats=true, kwargs...)
-    start = "(map (λx -> $(nats ? "randnat" : "make_random_digit")) #1)"
-    grammar_start = "(map (λx -> ?int) #1)"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "list",
-        "list",
-        "(fillrand $length)",
-        (e) -> occursin("x#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-function map_int_grammar_anylength(; nats=true, kwargs...)
-    randint = nats ? "randnat" : "make_random_digit"
-    start = "(map (λact -> $randint) (take $randint #1))"
-    grammar_start = "(map (λact -> ?int) (take ?int #1))"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "list",
-        "list",
-        "(fillrand 30)",
-        (e) -> occursin("act#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-
-function scanl_unit_grammar(; length=10, nats=true, kwargs...)
-    start = "(scanlunit (λacc x -> $(nats ? "randnat" : "make_random_digit")) 0 $length)"
-    grammar_start = "(scanlunit (λacc x -> ?int) 0 $length)"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "unit",
-        "list",
-        "(Unit)",
-        (e) -> occursin("acc#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-function scanl_unit_grammar_any_length(; nats=true, kwargs...)
-    randint = nats ? "randnat" : "make_random_digit"
-    start = "(scanlunit (λacc x -> $randint) 0 $randint)"
-    grammar_start = "(scanlunit (λacc x -> ?int) 0 ?int)"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "unit",
-        "list",
-        "(Unit)",
-        (e) -> occursin("acc#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-function map_unit_grammar_any_length(; nats=true, kwargs...)
-    randint = nats ? "randnat" : "make_random_digit"
-    start = "(mapunit (λx -> $randint) $randint)"
-    grammar_core = "(mapunit (λx -> ?int) ?int)"
-
-    TaskDist(
-        seq_grammar(start, grammar_core; nats, kwargs...),
-        "unit",
-        "list",
-        "(Unit)",
-        (e) -> true,
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-
-function scanl_int_grammar(; length=10, nats=true, kwargs...)
-    start = "(scanl (λacc x -> $(nats ? "randnat" : "make_random_digit")) 0 #1)"
-    grammar_start = "(scanl (λacc x -> ?int) 0 #1)"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "list",
-        "list",
-        "(fillrand $length)",
-        (e) -> occursin("acc#", e) && occursin("x#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-function scanl_int_grammar_anylength(; nats=true, kwargs...)
-    randint = nats ? "randnat" : "make_random_digit"
-    start = "(scanl (λacc act -> $randint) 0 (take $randint #1))"
-    grammar_start = "(scanl (λacc act -> ?int) 0 (take ?int #1))"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "list",
-        "list",
-        "(fillrand 30)",
-        (e) -> occursin("acc#", e) && occursin("act#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-function map_scanl_unit_grammar(; length=10, nats=true, kwargs...)
-    start = "(map (λstate -> $(nats ? "randnat" : "make_random_digit")) (scanlunit (λacc x -> $(nats ? "randnat" : "make_random_digit")) 0 $length))"
-    grammar_start = "(map (λstate -> ?int) (scanlunit (λacc x -> ?int) 0 $length))"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "unit",
-        "list",
-        "(Unit)",
-        (e) -> occursin("state#", e) && occursin("acc#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-# anylength + geom noise
-function hmm_simple(; nats=true, kwargs...)
-    randint = nats ? "randnat" : "make_random_digit"
-    # noise = "(geom_fuel 0.5 5)" # "$randint"
-    noise = "$randint"
-
-    start = "(map (λstate -> (+ state $noise)) (scanlunit (λacc x -> $randint) 0 $randint))"
-    grammar_start = "(map (λstate -> (+ ?int $noise)) (scanlunit (λacc x -> ?int) 0 ?int))"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "unit",
-        "list",
-        "(Unit)",
-        (e) -> occursin("state#", e) && occursin("acc#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-function map_scanl_unit_grammar_any_length(; nats=true, kwargs...)
-    randint = nats ? "randnat" : "make_random_digit"
-    start = "(map (λstate -> $randint) (scanlunit (λacc x -> $randint) 0 $randint))"
-    grammar_core = "(map (λstate -> ?int) (scanlunit (λacc x -> ?int) 0 ?int))"
-
-    TaskDist(
-        seq_grammar(start, grammar_core; nats, kwargs...),
-        "unit",
-        "list",
-        "(Unit)",
-        (e) -> occursin("state#", e) && occursin("acc#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-
-function map_scanl_int_grammar(; length=10, nats=true, kwargs...)
-    randint = nats ? "randnat" : "make_random_digit"
-    start = "(map (λstate -> $randint) (scanl (λacc act -> $randint) 0 #1))"
-    grammar_start = "(map (λstate -> ?int) (scanl (λacc act -> ?int) 0 #1))"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "list",
-        "list",
-        "(fillrand $length)",
-        (e) -> occursin("state#", e) && occursin("acc#", e) && occursin("act#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-
-function map_scanl_int_grammar_anylength(; nats=true, kwargs...)
-    randint = nats ? "randnat" : "make_random_digit"
-    start = "(map (λstate -> $randint) (scanl (λacc x -> $randint) 0 (take $randint #1)))"
-    grammar_start = "(map (λstate -> ?int) (scanl (λacc x -> ?int) 0 (take ?int #1)))"
-
-    TaskDist(
-        seq_grammar(start, grammar_start; nats, kwargs...),
-        "list",
-        "list",
-        "(fillrand 30)",
-        (e) -> occursin("state#", e) && occursin("acc#", e) && occursin("x#", e),
-        (_, o) -> any(x -> x != o[1], o) # not all the same
-    )
-end
-
-
-function seq_grammar(start::String, grammar_core::String; nats=true, lets=true, size_dist=Geometric(0.5))
-
-    # BAD BAD BAD
-    start = lets ? replace(start, "#1" => "#2") : start
-    grammar_core = lets ? replace(grammar_core, "#1" => "#2") : grammar_core
-
-
-    Pluck.synthesis_defs()
-    @define map "(int -> int) -> list -> list" "(Y (λ rec f xs -> (case xs of Nil => (Nil) | Cons => (λhd tl -> (Cons (f hd) (rec f tl))))))"
-    @define mapunit "(unit -> int) -> int -> list" "(λ f n -> (map f (fill n (Unit))))"
-    @define "bool_and" "bool -> bool -> bool" "(λ x y -> (case x of True => y | False => false))"
-    @define "bool_or" "bool -> bool -> bool" "(λ x y -> (case x of True => true | False => y))"
-    @define "bool_xor" "bool -> bool -> bool" "(λ x y -> (case x of True => (not y) | False => y))"
-
-
-    # @define fold "(Y (λrec xs init f -> (case xs of Nil => init | Cons => (λhd tl -> (f hd (rec tl init f))))))"
-    @define foldl "(int -> int -> int) -> int -> list -> int" """
-        (Y (λrec f acc xs ->
-            (case xs of Nil => acc
-                      | Cons => (λhd tl ->
-                                (let (acc' (f acc hd))
-                                    (rec f acc' tl)
-                                ))
-            )
-        ))
-    """
-    @define scanl "(int -> int -> int) -> int -> list -> list" """
-        (Y (λrec f acc xs ->
-            (case xs of Nil => (Nil)
-                    | Cons => (λhd tl ->
-                                (let (acc' (f acc hd))
-                                    (Cons acc' (rec f acc' tl))
-                                ))
-            )
-        ))
-    """
-
-    @define scanlunit "(int -> unit -> int) -> int -> int -> list" "(λf init n -> (scanl f init (fill n (Unit))))"
-
-    @define app_int_int "(int -> int) -> int -> int" "(λ f x -> (f x))"
-    @define letII "int -> (int -> int) -> int" "(λ x f -> (f x))"
-
-    prods = [
-        # "?list" => ["(map (λx -> ?int) (fill $length 0))"],
-        # "?list" => ["(mapunit (λx -> ?int) $length)"],
-
-        "?core" => [grammar_core],
-        "?lets" => ["(letII ?int (λk -> ?core))"],
-        "?int" => ["?int_term" => 8, "?int_nonterm" => 2],
-        "?int_term" => [
-            (nats ? "randnat" : "make_random_digit"),
-            "?const_or_var",
-            "(letII ?int (λx -> ?int_nonterm))" => 0.2
-            # "(app_int_int (λx -> ?int_nonterm) ?int)" => 0.2
-        ],
-        "?const_or_var" => [
-            "#int",
-            "?constint" => 0.3
-        ],
-        "?constint" => [("$i" for i ∈ 0:9)...],
-        "?int_nonterm" => [
-            "(inc ?int)",
-            "(+ ?int ?int)",
-            "(- ?int ?int)",
-            "(case ?int of O => ?int | S => (λn -> ?int))",
-            "(if ?bool ?int ?int)",
-        ],
-        "?bool" => ["?bool_term" => 8, "?bool_nonterm" => 2],
-        "?bool_term" => [
-            "#bool",
-            ["(flip 0.$i)" for i in 1:9]...,
-            # "true",
-            # "false"
-        ],
-        "?bool_nonterm" => [
-            # "(bool_and ?bool ?bool)",
-            # "(bool_or ?bool ?bool)",
-            # "(bool_xor ?bool ?bool)",
-            # "(not ?bool)",
-            # "(if ?bool ?bool ?bool)",
-            "(iseven ?int)",
-            "(== ?int ?int)",
-            "(> ?int ?int)",
-            # "(case ?int of O => ?bool | S => (λn -> ?bool))",
-        ],
-    ]
-
-    sym_of_type = [
-        "list" => lets ? "?lets" : "?core",
-        "int" => "?int",
-        "bool" => "?bool",
-    ]
-    start_expr_of_type = [
-        # "list" => "(mapunit (λx -> make_random_digit) $length)",
-        "list" => lets ? "(letII $(nats ? "randnat" : "make_random_digit") (λk -> $start))" : start,
-        # "list" => "(map (λx -> make_random_digit) (fill $length 0))",
-    ]
-    return Grammar(prods, sym_of_type, start_expr_of_type; size_dist=size_dist)
-end
-
-Pluck.synthesis_defs()
-map_unit_grammar();
-
-function more_defs()
-    Pluck.synthesis_defs()
-    @define map "(int -> int) -> list -> list" "(Y (λ rec f xs -> (case xs of Nil => (Nil) | Cons => (λhd tl -> (Cons (f hd) (rec f tl))))))"
-    @define mapunit "(unit -> int) -> int -> list" "(λ f n -> (map f (fill n (Unit))))"
-    @define "bool_and" "bool -> bool -> bool" "(λ x y -> (case x of True => y | False => false))"
-    @define "bool_or" "bool -> bool -> bool" "(λ x y -> (case x of True => true | False => y))"
-    @define "bool_xor" "bool -> bool -> bool" "(λ x y -> (case x of True => (not y) | False => y))"
-
-
-    # @define fold "(Y (λrec xs init f -> (case xs of Nil => init | Cons => (λhd tl -> (f hd (rec tl init f))))))"
-    @define foldl "(int -> int -> int) -> int -> list -> int" """
-        (Y (λrec f acc xs ->
-            (case xs of Nil => acc
-                    | Cons => (λhd tl ->
-                                (let (acc' (f acc hd))
-                                    (rec f acc' tl)
-                                ))
-            )
-        ))
-    """
-    @define scanl "(int -> int -> int) -> int -> list -> list" """
-        (Y (λrec f acc xs ->
-            (case xs of Nil => (Nil)
-                    | Cons => (λhd tl ->
-                                (let (acc' (f acc hd))
-                                    (Cons acc' (rec f acc' tl))
-                                ))
-            )
-        ))
-    """
-
-    @define scanlunit "(int -> unit -> int) -> int -> int -> list" "(λf init n -> (scanl f init (fill n (Unit))))"
-
-    @define app_int_int "(int -> int) -> int -> int" "(λ f x -> (f x))"
-    @define letII "int -> (int -> int) -> int" "(λ x f -> (f x))"
-
 end
