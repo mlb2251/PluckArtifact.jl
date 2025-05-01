@@ -53,16 +53,22 @@ table-1-save:
 	cp -r out/table1 out/table1_$(shell date +%Y-%m-%d_%H-%M-%S)
 
 table-1-check:
-	julia --project -e "using PluckArtifact; PA.diff_results(\"$(AFTER)/ours\", \"$(BEFORE)/ours\")"
+	julia --project -e "using PluckArtifact; PA.diff_results(\"$(AFTER)/$(COL)\", \"$(BEFORE)/$(COL)\")"
 
 table-1-check-vs-dice:
 	julia --project -e "using PluckArtifact; PA.diff_results(\"out/table1/ours\", \"out/table1/dice\")"
 
 evaluate:
-	make table-1-col COL=ours
+	make table-1-col
 	make table-1-save
 	make table-1-check
 	make table-1-diff
+
+evaluate-lazy:
+	make evaluate COL=lazy_enum BEFORE=out/table1_2025-04-30_22-30-59
+
+evaluate-eager:
+	make evaluate COL=eager_enum BEFORE=out/table1_2025-04-30_23-19-06
 
 table-1-sizes:
 	julia --project -e "using PluckArtifact; PA.table1_sizes(;which=:$(WHICH))"
