@@ -87,7 +87,7 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, 
         benchmark.normalize ? () -> normalize(Pluck.compile(expr; time_limit, kwargs...)) : () -> Pluck.compile(expr; time_limit, kwargs...)
     elseif strategy == "eager_enum"
         strict_kwargs = Dict(:strict => true, :disable_cache => true, :disable_traces => true)
-        benchmark.normalize ? () -> normalize(compile_inner(expr; time_limit, strict_kwargs..., kwargs...)) : () -> compile_inner(expr; strict_kwargs..., time_limit, kwargs...)
+        benchmark.normalize ? () -> normalize(Pluck.compile(expr; time_limit, strict_kwargs..., kwargs...)) : () -> Pluck.compile(expr; strict_kwargs..., time_limit, kwargs...)
     elseif strategy == "eager_kc"
         benchmark.normalize ? () -> normalize(Pluck.bdd_forward_strict(expr; state=BDDStrictEvalState(; kwargs...))) : () -> Pluck.bdd_forward_strict(expr; state=BDDStrictEvalState(; kwargs...))
     else
