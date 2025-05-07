@@ -27,7 +27,7 @@ end
 
 function table1(strategy; which=:original, cache=false)
     printstyled("=== Evaluating Table 1 [$which] ($strategy) ===\n"; color=:green)
-    rows = Dict(:original => original_rows, :added => added_rows)[which]
+    rows = Dict(:original => original_rows, :added => added_rows, :seq => seq_rows)[which]
     for row in rows
         if !cache || !has_cell(strategy, row)
             table1_cell(strategy, row)

@@ -35,6 +35,7 @@ network_models = ["diamond", "ladder"]
 sequence_models = ["pcfg", "hmm", "sorted_list", "string_editing"]
 original_rows = ["cancer", "survey", "alarm", "insurance", "hepar2", "hailfinder", "pigs", "water", "munin", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list"]
 added_rows = ["noisy_or", "burglary",  "evidence1", "evidence2", "grass", "murder_mystery", "two_coins", "caesar", "dice_figure_1"]
+seq_rows = ["diamond", "ladder", "pcfg", "hmm", "sorted_list", "string_editing"]
 all_benchmarks = ["dice_figure_1", "caesar", "noisy_or", "burglary", "cancer", "survey", "water", "alarm", "insurance", "hepar2", "pigs", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list", "hailfinder", "munin", "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
 
 const groups_of_baseline = Dict()
