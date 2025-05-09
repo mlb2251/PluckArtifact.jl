@@ -3,7 +3,7 @@
         {
             "config": {
                 "task": "all",
-                "title": "Fuzzing Evaluation",
+                "title": "Evaluation On Sampled Programs",
                 "height": 300
             },
             "subgroups": [

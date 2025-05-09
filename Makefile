@@ -27,6 +27,11 @@ figure-5-left-line:
 
 # FIGURE 5 RIGHT
 
+figure-5-right-mini:
+	make figure-5-right-line STRATEGY=dice
+	make figure-5-right-line STRATEGY=bdd
+
+
 figure-5-right:
 	make figure-5-right-line STRATEGY=bdd
 	make figure-5-right-line STRATEGY=dice
