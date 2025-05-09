@@ -37,6 +37,7 @@ table-1:
 	make table-1-col COL=lazy_enum
 	make table-1-col COL=eager_enum
 	make table-1-sizes
+	make table-1-diff-all
 	make table-1-show
 
 # Show the table
@@ -57,6 +58,14 @@ table-1-check:
 
 table-1-check-vs-dice:
 	julia --project -e "using PluckArtifact; PA.diff_results(\"out/table1/ours\", \"out/table1/dice\")"
+
+table-1-diff-correctness:
+	julia --project -e "using PluckArtifact; PA.diff_results(\"$(SRC)\", \"$(DST)\")"
+
+table-1-diff-all:
+	make table-1-diff-correctness SRC=out/table1/ours DST=out/table1/dice
+	make table-1-diff-correctness SRC=out/table1/ours DST=out/table1/lazy_enum
+	make table-1-diff-correctness SRC=out/table1/ours DST=out/table1/eager_enum
 
 evaluate:
 	make table-1-col
@@ -140,46 +149,46 @@ julia-instantiate:
 	cd Pluck.jl && make julia-instantiate
 
 
-# SYNTHESIS
+# # SYNTHESIS
 
-# number of threads to use
-THREADS = 8
-# bdd, dice, lazy, smc
-STRATEGY = bdd
+# # number of threads to use
+# THREADS = 8
+# # bdd, dice, lazy, smc
+# STRATEGY = bdd
 
-LEFT_TRUNCATE = 10 # submission: 100
-LEFT_TIMELIMIT = 1.0 # submission: 3.0
+# LEFT_TRUNCATE = 10 # submission: 100
+# LEFT_TIMELIMIT = 1.0 # submission: 3.0
 
-RIGHT_TRUNCATE = 8 # submission: 100
-RIGHT_STEPS = 500 # submission: 1000
-RIGHT_TIMELIMIT = 0.05 # submission: 0.05
-RIGHT_REPETITIONS = 1 # submission: 3
-# FIGURE 5 LEFT
+# RIGHT_TRUNCATE = 8 # submission: 100
+# RIGHT_STEPS = 500 # submission: 1000
+# RIGHT_TIMELIMIT = 0.05 # submission: 0.05
+# RIGHT_REPETITIONS = 1 # submission: 3
+# # FIGURE 5 LEFT
 
-figure-5-left:
-	make figure-5-left-line STRATEGY=bdd
-	make figure-5-left-line STRATEGY=dice
-	make figure-5-left-line STRATEGY=lazy
-	make figure-5-left-line STRATEGY=smc
-	make figure-5-left-show
+# figure-5-left:
+# 	make figure-5-left-line STRATEGY=bdd
+# 	make figure-5-left-line STRATEGY=dice
+# 	make figure-5-left-line STRATEGY=lazy
+# 	make figure-5-left-line STRATEGY=smc
+# 	make figure-5-left-show
 
-figure-5-left-show:
-	julia --project -e "using PluckArtifact; PA.build_figure5_left()"
+# figure-5-left-show:
+# 	julia --project -e "using PluckArtifact; PA.build_figure5_left()"
 
-figure-5-left-line:
-	julia --project -t$(THREADS) -e "using PluckArtifact; PA.figure5_left_single(:$(STRATEGY); truncate=$(LEFT_TRUNCATE), time_limit=$(LEFT_TIMELIMIT))"
+# figure-5-left-line:
+# 	julia --project -t$(THREADS) -e "using PluckArtifact; PA.figure5_left_single(:$(STRATEGY); truncate=$(LEFT_TRUNCATE), time_limit=$(LEFT_TIMELIMIT))"
 
-# FIGURE 5 RIGHT
+# # FIGURE 5 RIGHT
 
-figure-5-right:
-	make figure-5-right-line STRATEGY=bdd
-	make figure-5-right-line STRATEGY=dice
-	make figure-5-right-line STRATEGY=lazy
-	make figure-5-right-line STRATEGY=smc
-	make figure-5-right-show
+# figure-5-right:
+# 	make figure-5-right-line STRATEGY=bdd
+# 	make figure-5-right-line STRATEGY=dice
+# 	make figure-5-right-line STRATEGY=lazy
+# 	make figure-5-right-line STRATEGY=smc
+# 	make figure-5-right-show
 
-figure-5-right-show:
-	julia --project -e "using PluckArtifact; PA.build_figure5_right()"
+# figure-5-right-show:
+# 	julia --project -e "using PluckArtifact; PA.build_figure5_right()"
 
-figure-5-right-line:
-	julia --project -t$(THREADS) -e "using PluckArtifact; PA.figure5_right_single(:$(STRATEGY); truncate=$(RIGHT_TRUNCATE), mcmc_steps=$(RIGHT_STEPS), time_limit=$(RIGHT_TIMELIMIT))"
+# figure-5-right-line:
+# 	julia --project -t$(THREADS) -e "using PluckArtifact; PA.figure5_right_single(:$(STRATEGY); truncate=$(RIGHT_TRUNCATE), mcmc_steps=$(RIGHT_STEPS), time_limit=$(RIGHT_TIMELIMIT))"

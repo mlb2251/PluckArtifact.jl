@@ -6,6 +6,7 @@ version = "0.1.0"
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CUDD = "345a2cc7-28d8-58b2-abdf-cff77ea7d7f1"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Dice = "94eeadfc-1ba6-40b7-9ed8-dee71557d525"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
@@ -24,6 +25,7 @@ Pluck = {path = "Pluck.jl"}
 [compat]
 BenchmarkTools = "1.6.0"
 CUDD = "0.3.0"
+DataStructures = "0.18.22"
 Dice = "0.1.0"
 JSON = "0.21.4"
 JuliaFormatter = "1.0.62"

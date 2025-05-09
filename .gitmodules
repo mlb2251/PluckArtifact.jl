@@ -1,5 +1,5 @@
 [submodule "Pluck.jl"]
 	path = Pluck.jl
-	url = https://github.com/mlb2251/PluckArtifactDependency.jl.git
-	branch = pldi_camera_ready
+	url = https://github.com/mlb2251/Pluck.jl.git
+	branch = main
 
