@@ -25,7 +25,12 @@ function make_scaling_plot(task, sizes::Dict{String,Vector{Int}}, times; title="
     end
 
     colors = Dict("Dice.jl" => :black, "Ours" => :green, "Enum" => "#0077BB", "Ours (SMC)" => :orange)
-
+    # Add different dash styles for each method
+    # dashes = Dict("Dice.jl" => :solid, "Ours" => :dashdot, "Enum" => :dot, "Ours (SMC)" => :dashdotdot)
+    dashes = Dict("Dice.jl" => :solid, "Ours" => :solid, "Enum" => :solid, "Ours (SMC)" => :solid)
+    # Add markers for method identification
+    markers = Dict("Dice.jl" => :circle, "Ours" => :star5, "Enum" => :utriangle, "Ours (SMC)" => :diamond)
+    
     # Find maximum size across all datasets
     max_size = maximum(maximum(sizes[k]) for k in keys(sizes))
     min_size = minimum(minimum(sizes[k]) for k in keys(sizes))
@@ -62,7 +67,21 @@ function make_scaling_plot(task, sizes::Dict{String,Vector{Int}}, times; title="
             ylims=ylims,
             xticks=[10.0^i for i in -10:10],
             yticks=[10.0^i for i in -10:10],
+            # legendmarkersize=20,  # Set global legend marker size
         )
+    
+    # First create all legend entries in desired order
+    for key in ["Ours", "Enum", "Dice.jl", "Ours (SMC)"]
+        if haskey(times, key) && haskey(sizes, key)
+            marker_size = (markers[key] == :star5) ? 14 : 10
+            markerstrokewidth = (markers[key] == :star5) ? 0 : 2
+            # Create a separate scatter point just for the legend
+            scatter!([-1], [-1], color=colors[key], label=key, markersize=marker_size,
+                   marker=markers[key], markerstrokewidth=markerstrokewidth, markerstrokecolor=:white)
+        end
+    end
+    
+    # Then plot the actual data in the desired drawing order
     for key in ["Enum", "Dice.jl", "Ours (SMC)", "Ours"]
         if haskey(times, key) && haskey(sizes, key)
             # average times for identical sizes
@@ -75,10 +94,22 @@ function make_scaling_plot(task, sizes::Dict{String,Vector{Int}}, times; title="
                     push!(averaged_times, StatsBase.mean(times[key][indices]))
                 end
             end
+            
+            # Plot main line without markers and without adding to legend
+            plot!(my_plot, unique_sizes, averaged_times, label=nothing, linewidth=6, color=colors[key], 
+                  linestyle=dashes[key])
+                  
+            # Add marker only at the end point
+            last_index = length(unique_sizes)
+            if last_index > 0
+                # task == "sorted" && key == "Ours (SMC)" && (marker_size = 18)
+                marker_size = (markers[key] == :star5) ? 14 : 10
 
-            # plot
-            plot!([], color=colors[key], label=key, linewidth=2)
-            plot!(my_plot, unique_sizes, averaged_times, label=nothing, linewidth=6, color=colors[key])
+                
+                plot!(my_plot, [unique_sizes[last_index]], [averaged_times[last_index]], 
+                      label=nothing, color=colors[key], marker=markers[key], markersize=marker_size, 
+                      markerstrokewidth=2, markerstrokecolor=:white, linewidth=0, primary=false)
+            end
         else
             # println("Warning: $key not found in times or sizes")
         end
@@ -167,7 +198,7 @@ function make_benchmark(task, method, size; idx=nothing)
         if method == "Ours" || method == "Enum"
             return PluckBenchmark(generate_sorted_list_test(input_list); pre=sorted_defs)
         elseif method == "Ours (SMC)"
-            return PluckBenchmark(generate_sorted_list_test(input_list; equality="(suspended_list_eq nats_equal)"); pre=sorted_defs)
+            return PluckBenchmark(generate_sorted_list_test(input_list; equality="(suspendible-list=? nats_equal)"); pre=sorted_defs)
         elseif method == "Dice.jl"
             return DiceBenchmark(() -> pr(lists_equal(gen_sorted_list(length(input_list) + 1, Nat.Z(), 6), make_list(input_list))))
         end
@@ -180,7 +211,7 @@ function make_benchmark(task, method, size; idx=nothing)
         elseif method == "Ours (SMC)"
             input = get_ours_inputs_pcfg()[:inputs][idx]
             @assert length(input) == size "input length ($size) does not match size ($size)"
-            return PluckBenchmark("(suspended_list_eq symbol_equals (generate_pcfg_grammar (SS)) $(make_string_from_julia_list(input)))"; pre=pcfg_defs)
+            return PluckBenchmark("(suspendible-list=? symbol_equals (generate_pcfg_grammar (SS)) $(make_string_from_julia_list(input)))"; pre=pcfg_defs)
         elseif method == "Dice.jl"
             input = get_dice_inputs_pcfg()[:inputs][idx]
             input = replace(input, :a => :aa, :b => :bb, :c => :cc)
@@ -216,14 +247,15 @@ function plot_settings(task)
             title="Network Reachability (Diamond)",
             xlabel="Network Size",
             xlims=(10^1, 10^3),
-            ylims=(10^-4, 10^1)
+            ylims=(1.5 * 10^-4, 10^1),
+            legend=:bottomright
         )
     elseif task == "ladder"
         return (
             title="Network Reachability (Ladder)",
             xlabel="Network Size",
             xlims=(10^1, 10^3),
-            ylims=(10^-4, 10^2)
+            ylims=(1.5 * 10^-4, 1.9 * 10^1)
         )
     elseif task == "hmm"
         return (
@@ -236,15 +268,16 @@ function plot_settings(task)
         return (
             title="Sorted List Generation",
             xlabel="List Length",
-            xlims=(10^0, 10^2),
-            ylims=(10^-4, 10^2)
+            xlims=(10^0, 10^2 * 1.2),
+            ylims=(1.5 * 10^-4, 10^2),
+            legend=:topleft
         )
     elseif task == "pcfg"
         return (
             title="PCFG",
             xlabel="String Length",
             xlims=(10^1, 10^3),
-            ylims=(10^-3, 10^2)
+            ylims=(10^-3, 1.2 * 10^2)
         )
     else
         error("Invalid task: $task")

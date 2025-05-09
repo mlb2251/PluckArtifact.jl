@@ -18,5 +18,5 @@ evidence2_example = """
 )
 """
 
-add_benchmark!("evidence2", "pluck_default", PluckBenchmark(evidence2_example; kwargs=Dict(:normalize => true)))
+add_benchmark!("evidence2", "pluck_default", PluckBenchmark(evidence2_example; normalize=true))
 

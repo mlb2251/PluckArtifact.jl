@@ -23,7 +23,8 @@ function iterate_ladder(i1, i2, n)
 end
 
 function dice_ladder()
-    pr(iterate_ladder(true, false, 100))
+    (i1, i2) = iterate_ladder(true, false, 100)
+    pr(i1)
 end
 
 add_benchmark!("ladder", "dice_default", DiceBenchmark(dice_ladder))

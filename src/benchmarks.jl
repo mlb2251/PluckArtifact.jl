@@ -27,15 +27,16 @@ const groups_of_strategy = Dict(
     "dice" => ["dice_default"],
     "lazy_enum" => ["pluck_lazy_enum", "pluck_default"],
     "eager_enum" => ["pluck_strict_enum", "pluck_default"],
+    "eager_kc" => ["pluck_eager_kc", "pluck_default"],
 )
 
-small_bayes_nets = ["burglary", "evidence1", "evidence2", "grass", "murder_mystery", "noisy_or", "two_coins"]
+small_bayes_nets = ["dice_figure_1", "caesar", "burglary", "evidence1", "evidence2", "grass", "murder_mystery", "noisy_or", "two_coins"]
 network_models = ["diamond", "ladder"]
 sequence_models = ["pcfg", "hmm", "sorted_list", "string_editing"]
-original_rows = ["noisy_or", "burglary", "cancer", "survey", "water", "alarm", "insurance", "hepar2", "pigs", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list"]
-added_rows = ["hailfinder", "munin", "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
-all_benchmarks = ["noisy_or", "burglary", "cancer", "survey", "water", "alarm", "insurance", "hepar2", "pigs", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list", "hailfinder", "munin", "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
-
+original_rows = ["cancer", "survey", "alarm", "insurance", "hepar2", "hailfinder", "pigs", "water", "munin", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list"]
+added_rows = ["noisy_or", "burglary",  "evidence1", "evidence2", "grass", "murder_mystery", "two_coins", "caesar", "dice_figure_1"]
+seq_rows = ["diamond", "ladder", "pcfg", "hmm", "sorted_list", "string_editing"]
+all_benchmarks = ["dice_figure_1", "caesar", "noisy_or", "burglary", "cancer", "survey", "water", "alarm", "insurance", "hepar2", "pigs", "diamond", "ladder", "hmm", "pcfg", "string_editing", "sorted_list", "hailfinder", "munin", "evidence1", "evidence2", "grass", "murder_mystery", "two_coins"]
 
 const groups_of_baseline = Dict()
 
@@ -62,8 +63,13 @@ function get_benchmark(baseline::String, strategy::String)
     nothing
 end
 
+function run_benchmark(benchmark::String, strategy::String; kwargs...)
+    benchmark = get_benchmark(benchmark, strategy)
+    isnothing(benchmark) && error("Benchmark $benchmark not found for strategy $strategy")
+    run_benchmark(benchmark, strategy; kwargs...)
+end
 
-function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false)
+function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, kwargs...)
     benchmark.pre !== nothing && benchmark.pre()
     benchmark.query = isnothing(benchmark.make_query) ? benchmark.query : benchmark.make_query()
     expr = parse_expr(benchmark.query)
@@ -71,18 +77,20 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false)
     fast |= !isnothing(time_limit) # if we have a time limit, we want normal timing not bbtime
 
     if !isnothing(time_limit)
-        printstyled("using time limit $time_limit seconds for $strategy\n"; color=:yellow)
+        println("using time limit $time_limit seconds")
     end
 
     fn_to_time = if strategy == "ours"
-        benchmark.normalize ? () -> bdd_normalize(bdd_forward(expr)) : () -> bdd_forward(expr)
+        benchmark.normalize ? () -> normalize(Pluck.compile(expr, LazyKCConfig(; kwargs...))) : () -> Pluck.compile(expr, LazyKCConfig(; kwargs...))
     elseif strategy == "smc"
-        benchmark.normalize ? () -> bdd_normalize(bdd_forward_with_suspension(expr)) : () -> bdd_forward_with_suspension(expr)
+        benchmark.normalize ? () -> normalize(bdd_forward_with_suspension(expr; kwargs...)) : () -> bdd_forward_with_suspension(expr; kwargs...)
     elseif strategy == "lazy_enum"
-        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; time_limit)) : () -> lazy_enumerate(expr; time_limit)
+        benchmark.normalize ? () -> normalize(Pluck.compile(expr; time_limit, kwargs...)) : () -> Pluck.compile(expr; time_limit, kwargs...)
     elseif strategy == "eager_enum"
         strict_kwargs = Dict(:strict => true, :disable_cache => true, :disable_traces => true)
-        benchmark.normalize ? () -> bdd_normalize(lazy_enumerate(expr; time_limit, strict_kwargs...)) : () -> lazy_enumerate(expr; strict_kwargs..., time_limit)
+        benchmark.normalize ? () -> normalize(Pluck.compile(expr; time_limit, strict_kwargs..., kwargs...)) : () -> Pluck.compile(expr; strict_kwargs..., time_limit, kwargs...)
+    elseif strategy == "eager_kc"
+        benchmark.normalize ? () -> normalize(Pluck.bdd_forward_strict(expr; state=BDDStrictEvalState(; kwargs...))) : () -> Pluck.bdd_forward_strict(expr; state=BDDStrictEvalState(; kwargs...))
     else
         error("Unknown strategy: $strategy")
     end
@@ -112,10 +120,16 @@ function run_benchmark(benchmark::DiceBenchmark, strategy; fast=false)
 end
 
 function do_timing(fn_to_time; fast=false)
+    clear_rsdd_time!()
+    tstart = time()
     if fast
         timing1 = (@elapsed (res = fn_to_time())) * 1000;
+        println("timing done: $timing1")
         if timing1 > 20000
             println("Time: $(timing1/1000) s")
+            total_time = time() - tstart
+            bdd_fract = get_rsdd_time().rsdd_time / total_time
+            println("BDD time: $(100*round(bdd_fract, digits=2))%")
             return res, timing1 # don't run the second time if it's already > 20s
         end
         GC.gc();
@@ -124,5 +138,8 @@ function do_timing(fn_to_time; fast=false)
     else
         res, timing = @bbtime $fn_to_time()
     end
+    total_time = time() - tstart
+    bdd_fract = get_rsdd_time().rsdd_time / total_time
+    println("BDD time: $(100*round(bdd_fract, digits=2))%")
     return res, timing
 end

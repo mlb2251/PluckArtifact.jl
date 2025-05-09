@@ -1,0 +1,55 @@
+{
+    "groups": [
+        {
+            "config": {
+                "task": "all",
+                "title": "Evaluation on Randomly Generated Programs",
+                "height": 300
+            },
+            "subgroups": [
+                "cIID-Gen",
+                "cIID-IO",
+                "Markov-Gen",
+                "Markov-IO",
+                "HMM-Gen",
+                "HMM-Gen-IO"
+            ]
+        },
+        {
+            "config": {
+                "task": "cIID-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-10/dataset.json"
+        },
+        {
+            "config": {
+                "task": "cIID-IO"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/14-36-57/dataset.json"
+        },
+        {
+            "config": {
+                "task": "Markov-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-20/dataset.json"
+        },
+        {
+            "config": {
+                "task": "Markov-IO"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/14-37-19/dataset.json"
+        },
+        {
+            "config": {
+                "task": "HMM-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-50/dataset.json"
+        },
+        {
+            "config": {
+                "task": "HMM-Gen-IO"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-14/13-34-18/dataset.json"
+        }
+    ]
+}

@@ -7,16 +7,19 @@ function perturb_defs()
     if length(options) == 1
       return options[1]
     else
-      flip_scrutinee = PrimOp(FlipOp(), [ConstReal(1.0 / length(options))])
-      constructors = [:True, :False]
-      cases = Dict(:True => options[1], :False => make_uniform(options[2:end]))
-      return CaseOf(flip_scrutinee, cases, constructors)
+      flip_scrutinee = parse_expr("(flip $(1.0 / length(options)))")
+      # PExpr(FlipOp(), Any[ConstNative(1.0 / length(options))])
+      # cases = [(:True, options[1]), (:False, make_uniform(options[2:end]))]
+      then_branch = options[1]
+      else_branch = make_uniform(options[2:end])
+      return parse_expr("(if $flip_scrutinee $then_branch $else_branch)")
     end
   end
 
-  CHAR_TYPE = Pluck.define_type!(:Char, Dict(Symbol("$(a)_") => Symbol[] for a = 'a':'e'))
-  CHARACTERS = [Pluck.Construct(CHAR_TYPE, Symbol("$(a)_"), []) for a = 'a':'e']
-  DEFINITIONS[:random_char] = Pluck.Definition(:random_char, make_uniform(CHARACTERS), nothing, true)
+  Pluck.define_type!(:Char, Dict(Symbol("$(a)_") => Symbol[] for a = 'a':'e'))
+  # CHARACTERS = [Pluck.Construct(Symbol("$(a)_"), []) for a = 'a':'e']
+  CHARACTERS = [parse_expr("($(a)_)") for a = 'a':'e']
+  DEFINITIONS[:random_char] = Pluck.Definition(:random_char, make_uniform(CHARACTERS))
   @define "strings_eq" """
   (Y (λ strings_eq l1 l2 -> (case l1 of 
     Nil => (case l2 of Nil => true | Cons _ _ => false)

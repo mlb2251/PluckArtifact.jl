@@ -2,7 +2,7 @@ module PluckArtifact
 
 const PA = PluckArtifact
 
-export PA, artifact, table1, figure4, figure5
+export PA, artifact, table1, figure4, figure5, get_rsdd_time, clear_rsdd_time!, @rsdd_time
 
 using Revise
 using BenchmarkTools

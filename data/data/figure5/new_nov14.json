@@ -1,0 +1,207 @@
+{
+    "groups": [
+        {
+            "config": {
+                "task": "all",
+                "yticks": [0, 100, 200, 300, 400, 500, 600, 700],
+                "ymax": 700,
+                "title": "Evaluation on Randomly Generated Programs",
+                "height": 300,
+                "perp1": {
+                    "title": "Synthesis Tasks Within 10% of Ground Truth Inverse Perplexity",
+                    "xticks": [0, 200, 400, 600, 800, 1000, 1200]
+                },
+                "perp2": {
+                    "title": "Average Inverse Perplexity During Synthesis",
+                    "xmax": 90,
+                    "ymin": 0.15,
+                    "ymax": 0.45,
+                    "yticks": [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45],
+                    "legend_y": 170
+                }
+            },
+            "subgroups": [
+                "cIID-Gen",
+                "cIID-IO",
+                "Markov-Gen",
+                "Markov-IO",
+                "HMM-Gen",
+                "HMM-Gen-IO"
+            ]
+        },
+        {
+            "config": {
+                "task": "cIID-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-10/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/04-14-52/results.json",
+            "runs": [
+                {
+                    "mode": "bdd",
+                    "path": "/data/figure5/out/results/2024-11-13/16-31-38/expt/summary.json"
+                },
+                {
+                    "mode": "dice",
+                    "path": "/data/figure5/out/results/2024-11-13/15-52-18/expt/summary.json"
+                },
+                {
+                    "mode": "lazy",
+                    "path": "/data/figure5/out/results/2024-11-13/16-55-41/expt/summary.json"
+                },
+                {
+                    "mode": "smc",
+                    "path": "/data/figure5/out/results/2024-11-14/04-56-54/expt/summary.json"
+                }
+            ]
+        },
+        {
+            "config": {
+                "task": "cIID-IO"
+            },
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/14-45-33/results.json",
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/14-36-57/dataset.json",
+            "runs": [
+                {
+                    "mode": "bdd",
+                    "path": "/data/figure5/out/results/2024-11-13/18-49-06/expt/summary.json"
+                },
+                {
+                    "mode": "dice",
+                    "path": "/data/figure5/out/results/2024-11-13/18-11-31/expt/summary.json"
+                },
+                {
+                    "mode": "lazy",
+                    "path": "/data/figure5/out/results/2024-11-13/19-12-09/expt/summary.json"
+                },
+                {
+                    "mode": "smc",
+                    "path": "/data/figure5/out/results/2024-11-14/05-19-26/expt/summary.json"
+                }
+            ]
+        },
+        {
+            "config": {
+                "task": "Markov-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-20/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/13-12-32/results.json",
+            "runs": [
+                {
+                    "mode": "dice",
+                    "path": "/data/figure5/out/results/2024-11-13/19-38-24/expt/summary.json"
+                },
+                {
+                    "mode": "bdd",
+                    "path": "/data/figure5/out/results/2024-11-13/21-09-17/expt/summary.json"
+                },
+                {
+                    "mode": "lazy",
+                    "path": "/data/figure5/out/results/2024-11-13/21-41-40/expt/summary.json"
+                },
+                {
+                    "mode": "smc",
+                    "path": "/data/figure5/out/results/2024-11-14/03-18-34/expt/summary.json"
+                }
+            ]
+        },
+        {
+            "config": {
+                "task": "Markov-IO"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/14-37-19/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/15-41-10/results.json",
+            "runs": [
+                {
+                    "mode": "bdd",
+                    "path": "/data/figure5/out/results/2024-11-14/01-42-18/expt/summary.json"
+                },
+                {
+                    "mode": "dice",
+                    "path": "/data/figure5/out/results/2024-11-14/00-51-39/expt/summary.json"
+                },
+                {
+                    "mode": "lazy",
+                    "path": "/data/figure5/out/results/2024-11-14/02-10-32/expt/summary.json"
+                },
+                {
+                    "mode": "smc",
+                    "path": "/data/figure5/out/results/2024-11-14/03-50-49/expt/summary.json"
+                }
+            ]
+        },
+        {
+            "config": {
+                "task": "HMM-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-50/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/13-51-45/results.json",
+            "runs": [
+                {
+                    "mode": "bdd",
+                    "path": "/data/figure5/out/results/2024-11-14/06-38-38/expt/summary.json"
+                },
+                {
+                    "mode": "dice",
+                    "path": "/data/figure5/out/results/2024-11-14/05-41-56/expt/summary.json"
+                },
+                {
+                    "mode": "lazy",
+                    "path": "/data/figure5/out/results/2024-11-14/07-07-38/expt/summary.json"
+                },
+                {
+                    "mode": "smc",
+                    "path": "/data/figure5/out/results/2024-11-14/07-38-51/expt/summary.json"
+                }
+
+            ]
+        },
+        {
+            "config": {
+                "task": "HMM-Gen-IO"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-14/13-34-18/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-14/13-45-02/results.json",
+            "runs": [
+                {
+                    "mode": "bdd",
+                    "path": "/data/figure5/out/results/2024-11-14/15-47-40/expt/summary.json"
+                },
+                {
+                    "mode": "dice",
+                    "path": "/data/figure5/out/results/2024-11-14/13-45-03/expt/summary.json"
+                },
+                {
+                    "mode": "lazy",
+                    "path": "/data/figure5/out/results/2024-11-14/18-25-02/expt/summary.json"
+                },
+                {
+                    "mode": "smc",
+                    "path": "/data/figure5/out/results/2024-11-14/18-56-13/expt/summary.json"
+                }
+            ]
+        },
+        {
+            "config": {
+                "task": "Markov-Gen-nodiceadd"
+            },
+            "runs": [
+                {
+                    "mode": "dice",
+                    "path": "/data/figure5/out/results/2024-11-14/17-21-44/expt/summary.json"
+                },
+                {
+                    "mode": "bdd",
+                    "path": "/data/figure5/out/results/2024-11-13/21-09-17/expt/summary.json"
+                },
+                {
+                    "mode": "lazy",
+                    "path": "/data/figure5/out/results/2024-11-13/21-41-40/expt/summary.json"
+                },
+                {
+                    "mode": "smc",
+                    "path": "/data/figure5/out/results/2024-11-14/03-18-34/expt/summary.json"
+                }
+            ]
+        }
+    ]
+}

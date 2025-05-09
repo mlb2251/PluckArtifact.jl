@@ -4,3 +4,6 @@ data/large_bayes_nets/*.jl.ignore
 out/
 build.log
 data_to_plot/*
+profile.pb.gz
+.clj-kondo/.cache/v1/lock
+.lsp/.cache/db.transit.json

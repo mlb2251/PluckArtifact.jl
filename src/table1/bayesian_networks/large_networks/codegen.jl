@@ -1,59 +1,4 @@
 
-function format_prob(p)
-    # Helper function to format probability without scientific notation
-    str = @sprintf("%.10f", p)
-    str = replace(str, r"0+$" => "")  # Remove trailing zeros
-    str = replace(str, r"\.$" => ".0") # Ensure decimal point
-    @assert !occursin("e", str)
-    return str
-end
-
-function discrete(options, probabilities)
-    # Filter out options with 0 probability
-    nonzero_indices = findall(x -> x > 0, probabilities)
-    options = options[nonzero_indices]
-    probabilities = probabilities[nonzero_indices]
-    n = length(options)
-
-    @assert length(probabilities) == n
-    @assert abs(sum(probabilities) - 1.0) < 1e-5 "Probabilities must sum to 1"
-
-    # Base cases
-    n == 1 && return "$(options[1])"
-    n == 2 && return "(if (flip $(format_prob(probabilities[2]))) $(options[2]) $(options[1]))"
-
-    # Compute number of bits needed to represent integers up to length(options)
-    num_bits = ceil(Int, log2(n))
-
-    # Pad probabilities to power of 2
-    padded_probs = vcat(probabilities, zeros(2^num_bits - n))
-
-    # Build expression from innermost to outermost
-    function build_expr(bit_idx, start_idx, end_idx)
-        if bit_idx == 0
-            # Return the appropriate option if in range, otherwise first option
-            return start_idx <= n ? "$(options[start_idx])" : "$(options[1])"
-        end
-
-        mid = Int((start_idx + end_idx + 1) ÷ 2)
-        denom = sum(padded_probs[start_idx:end_idx])
-
-        if denom == 0
-            return build_expr(bit_idx - 1, start_idx, mid - 1)
-        end
-
-        p = sum(padded_probs[mid:end_idx]) / denom
-
-        left = build_expr(bit_idx - 1, mid, end_idx)
-        right = build_expr(bit_idx - 1, start_idx, mid - 1)
-
-        return "(if (flip $(format_prob(p))) $left $right)"
-    end
-
-    return build_expr(num_bits, 1, 2^num_bits)
-end
-
-using DataStructures
 
 struct Variable
     name::Symbol
@@ -66,7 +11,7 @@ function mk_int(var::Variable, i::Int; use_int_dist=false)
     @assert use_int_dist
     @assert i > 0 && i <= length(var.domain)
     width = bitwidth(var)
-    return "(mk_int &$width &$(i-1))"
+    return "(mk_int @$width @$(i-1))"
 end
 
 function mk_int(var::Variable, val::Symbol; use_int_dist=false)
@@ -182,7 +127,7 @@ function generate_bayes_net_code(variables::Dict{Symbol, Variable}, probabilitie
             var = variables[prob.target]
             values = [mk_int(var, val; use_int_dist=use_int_dist) for val in var.domain]
             # add a new let binding for the target variable
-            push!(bindings, "$(prob.target) $(discrete(values, prob.probabilities))")
+            push!(bindings, "$(prob.target) $(Pluck.discrete(values, prob.probabilities))")
         else
             # Conditional probability
             expr = generate_conditional_distribution(prob, variables; use_int_dist=use_int_dist)
@@ -210,7 +155,7 @@ function generate_conditional_distribution(prob::ProbabilityStatement, variables
             last_val = variables[parent].domain[end]
             last_probs = prob.probabilities[[last_val]]
             last_values = [mk_int(variables[prob.target], val; use_int_dist=use_int_dist) for val in variables[prob.target].domain]
-            expr = discrete(last_values, last_probs)
+            expr = Pluck.discrete(last_values, last_probs)
 
             # loop over domain of parent "B" (all except last variable)
             # for each of these variables, we build a new if-statement and put the previous result in the else branch
@@ -219,7 +164,7 @@ function generate_conditional_distribution(prob::ProbabilityStatement, variables
                 var = variables[prob.target]
                 values = [mk_int(var, val; use_int_dist=use_int_dist) for val in var.domain]
                 if_cond = mk_eq(variables[parent], parent, mk_int(variables[parent], val; use_int_dist=use_int_dist); use_int_dist=use_int_dist)
-                then_br = discrete(values, probs)
+                then_br = Pluck.discrete(values, probs)
                 expr = "(if $if_cond $then_br $expr)"
             end
             return expr
@@ -230,7 +175,7 @@ function generate_conditional_distribution(prob::ProbabilityStatement, variables
                 probs = prob.probabilities[[val]] # P(A|B=val)
                 var = variables[prob.target]
                 values = [mk_int(var, val; use_int_dist=use_int_dist) for val in var.domain]
-                then_br = discrete(values, probs)
+                then_br = Pluck.discrete(values, probs)
                 expr = "$val => $then_br"
                 push!(exprs, expr)
             end
@@ -250,14 +195,14 @@ function generate_conditional_distribution(prob::ProbabilityStatement, variables
     for parent_vals in Iterators.product(parent_domains...)
         parent_vals = collect(Symbol, parent_vals)
         probs = prob.probabilities[parent_vals]
-        current_exprs[parent_vals] = discrete(target_values, probs)
+        current_exprs[parent_vals] = Pluck.discrete(target_values, probs)
     end
 
     # We're trying to generate a probabilistic program representing P(A | B,C,D)
     # And we have mappings from concrete parent values to distributions on target values
-    # (which we can reify with discrete()).
+    # (which we can reify with Pluck.discrete()).
     # Our approach is this: we first build an expression for P(A | B=b C=c D=d) and store it in current_exprs[bcd]
-    # This is easy it's just discrete() and generates a flipnest 
+    # This is easy it's just Pluck.discrete() and generates a flipnest 
     # Then we generate an expression for P(A | B=b C=c) and store it in current_exprs[bc]. This expression 
     # is going to end up casing on D and the branches of the case will be the current_exprs[bcd] expression we got 
     # at the previous step.

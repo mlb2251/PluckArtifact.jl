@@ -1,0 +1,889 @@
+<html>
+<meta charset="utf-8">
+
+<head>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Atkinson Hyperlegible', 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        button {
+
+            display: inline-block;
+            outline: 0;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 4px;
+            font-size: 13px;
+            height: 25px;
+            background-color: #0000000d;
+            color: #0e0e10;
+            padding: 0 10px;
+
+        }
+
+        button:hover {
+            background-color: #0000001a;
+        }
+
+        #frame-background {
+            fill: rgb(241, 241, 241);
+            stroke: gray;
+        }
+
+        span.highlighted {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        div.expression {
+            font-family: 'Atkinson Hyperlegible', 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            cursor: pointer;
+        }
+
+        text {
+            font-size: 16px;
+            font-family: 'Atkinson Hyperlegible', 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            padding: 4px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        td {
+            max-width: 600px;
+            overflow-x: scroll;
+        }
+
+        table.big {
+            border: none;
+        }
+
+        td.big {
+            max-width: 100%;
+            border: none;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        td::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        td {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .header-row {
+            position: sticky;
+            top: 0;
+            background-color: white;
+        }
+
+        #info {
+            border: 1px solid black;
+            padding: 10px;
+        }
+
+        #rsync-download,
+        #rsync-upload,
+        #rsync-publish {
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h1 id="dashboard-title">Dashboard</h1>
+
+    <div>
+        <div id="top-bar">
+        </div>
+        <label for="fileInput">Select JSON File:</label>
+        <input type="file" id="fileInput" accept=".json" />
+        <br>
+        <input type="text" id="load-path" value="summary.json" style="width: 300px;">
+        <button onclick="load_by_path()">Load</button>
+        <button onclick="export_viz()">Export</button>
+        <div style="white-space: nowrap;">
+            <button onclick="copy_to_clipboard(rsync_command('download'))">Download All</button>
+            <span id="rsync-download"></span>
+        </div>
+        <div style="white-space: nowrap;">
+            <button onclick="copy_to_clipboard(rsync_command('upload'))">Upload All</button>
+            <span id="rsync-upload"></span>
+        </div>
+        <div style="white-space: nowrap;">
+            <button onclick="copy_to_clipboard(rsync_command('publish'))">Publish All</button>
+            <span id="rsync-publish"></span>
+        </div>
+        <div>
+            <button
+                onclick="copy_to_clipboard(rsync_command('download', get_selected_tasks().map(stub => stub.path)))">Download
+                Selected</button>
+            <button
+                onclick="copy_to_clipboard(rsync_command('upload', get_selected_tasks().map(stub => stub.path)))">Upload
+                Selected</button>
+            <button
+                onclick="copy_to_clipboard(rsync_command('publish', get_selected_tasks().map(stub => stub.path)))">Publish
+                Selected</button>
+        </div>
+
+    </div>
+    <br>
+
+    <div>
+        <input type="checkbox" id="notify-done" onclick="beepboop()"> Notify when done
+    </div>
+    <table class="big">
+        <tr id="info">
+        </tr>
+        <tr id="stats">
+        </tr>
+        <tr id="task-stats">
+        </tr>
+        <tr id="tables">
+        </tr>
+    </table>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+
+    <script>
+        "use strict";
+
+        const url_params = new URLSearchParams(window.location.search)
+        if (url_params.has("path"))
+            document.getElementById('load-path').value = url_params.get("path")
+        load_by_path()
+
+        document.getElementById('fileInput').addEventListener('change', () => loadFile(fileInput.files[0]));
+        function loadFile(selectedFile) {
+            var reader = new FileReader();
+            reader.onload = function (event) {
+                show_data(JSON.parse(event.target.result))
+            };
+            reader.readAsText(selectedFile);
+        }
+
+        function copy_to_clipboard(text) {
+            navigator.clipboard.writeText(text)
+        }
+
+        function beepboop() {
+            [340, 440, 540].map((freq, i) => {
+                let A = new AudioContext();
+                let o = new OscillatorNode(A, { type: "sine", frequency: freq });
+                let g = new GainNode(A, { gain: 0.1 }); // volume
+                o.connect(g).connect(A.destination);
+                const duration = 1000
+                const gap = 0
+                setTimeout(() => o.start(0), i * (duration + gap));
+                setTimeout(() => o.stop(0), i * (duration + gap) + duration)
+            })
+        }
+
+        function get_selected_tasks() {
+            const selected = []
+            for (const task of window.tasks) {
+                for (const init_stub of task.init_stubs) {
+                    if (init_stub.entries["Path"].select("input").node().checked) {
+                        selected.push(init_stub)
+                    }
+                }
+            }
+            return selected
+        }
+
+        function export_viz() {
+            const blob = new Blob([JSON.stringify(window.viz_data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'viz.json';
+            a.click();
+        }
+
+
+        function rsync_command(mode, paths = []) {
+            if (window.viz_data == undefined) {
+                throw new Error("viz_data not assigned")
+            }
+
+            const outdir = window.viz_data.out
+            if (!outdir.startsWith("out/"))
+                throw new Error("outdir must start with out/") // good to be careful with shell commands
+
+            // by default grab the whole directory that summary.json is in
+            if (paths.length == 0) {
+                paths = [""]
+            }
+            else {
+                paths = paths.slice()
+                paths.push("html")
+            }
+            // paths = document.getElementById('load-path').value.split("/").slice(0, -1).join("/") + "/"
+            if (paths.constructor === String)
+                paths = [paths]
+
+            for (let i = 0; i < paths.length; i++) {
+                paths[i] = outdir + "/" + paths[i].trim()
+            }
+
+            const local_dir = `~/proj/julia/coarse-to-fine-synthesis`
+            const remote_dir = `${window.viz_data.hostname}:${window.viz_data.pwd}`
+            const publish_dir = `s5:/afs/csail.mit.edu/u/m/mlbowers/public_html/proj/ctf`
+
+            let res = "rsync -avzR --mkpath"
+
+            // add all the sources
+            for (const path of paths) {
+                if (mode == "download")
+                    res += ` ${remote_dir}/./${path}`
+                else if (mode == "upload")
+                    res += ` ${local_dir}/./${path}`
+                else if (mode == "publish")
+                    res += ` ${local_dir}/./${path}`
+                else
+                    console.log("unknown mode", mode)
+            }
+
+            // add the destination
+            if (mode == "download")
+                res += ` ${local_dir}/`
+            else if (mode == "upload")
+                res += ` ${remote_dir}/`
+            else if (mode == "publish")
+                res += ` ${publish_dir}/`
+            else
+                console.log("unknown mode", mode)
+
+            return res
+        }
+
+        function load_by_path() {
+            const path = document.getElementById('load-path').value
+            d3.json('../' + path, { cache: "no-store" })
+                .then(show_data)
+                .catch(error => console.log(error));
+        }
+
+
+
+        let curr_step = 1
+        const is_internal = node => node.children && node.children.length > 0
+
+        function show_data(data) {
+            window.viz_data = data
+
+            const local_url_prefix = "http://localhost:8000/" + viz_data.out + "/html/"
+            const shared_url_prefix = "http://localhost:8000/html/"
+            const publish_url_prefix = "https://people.csail.mit.edu/mlbowers/proj/ctf/" + viz_data.out + "/html/"
+            // const url_prefix = (window.location.origin + window.location.pathname).replace("summary.html", "")
+
+            let is_shared = window.location.pathname.startsWith("/html")
+
+            if (!is_shared) {
+                let out_html_file = window.location.pathname
+                let shared_html_file = "/html/summary.html"
+                let outdir = out_html_file.replace('html/summary.html', '')
+                let target_file = url_params.get("path")
+                // make a link to put this in terms of the shared html file
+                let shared_html_link = shared_html_file + "?path=" + outdir + target_file
+                d3.select("#top-bar").append("div").append("a")
+                    .attr("href", shared_html_link)
+                    .text("Dynamic Version")
+            }
+
+
+            let locality;
+            if (local_url_prefix.startsWith(window.location.origin))
+                locality = "local"
+            else if (publish_url_prefix.startsWith(window.location.origin))
+                locality = "published"
+            else
+                locality = "unknown"
+
+            window.locality = locality
+
+            d3.select("#dashboard-title").text(data.strat + " " + data.timestamp + " " + locality)
+
+
+            d3.select("#rsync-download").node().innerHTML = rsync_command("download")
+            d3.select("#rsync-upload").node().innerHTML = rsync_command("upload")
+            d3.select("#rsync-publish").node().innerHTML = rsync_command("publish")
+
+            if (locality != "local")
+                d3.select("#top-bar").append("a").text("local").attr("href", local_url_prefix + "summary.html")
+            if (locality != "published")
+                d3.select("#top-bar").append("a").text(" published").attr("href", publish_url_prefix + "summary.html")
+
+            const tasks = []
+            window.tasks = tasks
+            for (const init_stubs of data.init_stubs_of_task) {
+                tasks.push({
+                    task: init_stubs[0].task,
+                    init_stubs: init_stubs
+                })
+                for (const init_stub of init_stubs) {
+                    init_stub.entries = {}
+                }
+            }
+
+            const strat = data.strat
+
+            const info_div = d3.select('#info').append('td').classed("big", true).node()
+            info_div.innerHTML += "<b>timestamp</b>: " + data.timestamp + "<br>"
+            info_div.innerHTML += "<b>commit</b>: " + data.commit + "<br>"
+            info_div.innerHTML += "<b>branch</b>: " + data.branch + "<br>"
+            info_div.innerHTML += "<b>dirty</b>: " + data.dirty + "<br>"
+            info_div.innerHTML += "<b>hostname</b>: " + data.hostname + "<br>"
+            info_div.innerHTML += "<b>pwd</b>: " + data.pwd + "<br>"
+            info_div.innerHTML += "<b>out</b>: " + data.out + "<br>"
+            if (data.cmd)
+                info_div.innerHTML += "<b>cmd</b>: " + data.cmd + "<br>"
+
+            info_div.innerHTML += "<b>summary_path</b>: " + data.summary_path + "<br>"
+            for (let [k, v] of Object.entries(data.config)) {
+                v = v == null ? "nothing" : v
+                info_div.innerHTML += "<b>" + k + "</b>" + ": " + v.toString().replaceAll("\n", "<br>").replaceAll(" ", "&nbsp;") + "<br>"
+            }
+            if (data.dt)
+                info_div.innerHTML += "<b>Results</b>:<br>Total Time: " + data.dt.toFixed(2) + "s <br>"
+            if (data.tdd)
+                info_div.innerHTML += data.tdd.replaceAll("\n", "<br>").replaceAll(" ", "&nbsp;") + "<br>"
+
+            const table = d3.select('#tables').append('td').classed('big', true).append('table')
+            const header_row = table.append('tr').attr("class", "header-row")
+            const rows = []
+            const all_entries = []
+
+            // ["Path", "Task", "Repetition", "Expanded", "Evaluated", "Nonterm Evals", "Eval Time", "Nonterm Eval Time", "Best Likelihood", "Best Posterior"]
+            let headers;
+            if (strat == "mcmc") {
+                headers = ["Path", "Task", "Repetition", "Steps", "Time", "EvalTime", "Accepted & ΔLL", "Likelihood", "GT Likelihood", "Posterior", "Expr", "GT Expr", "Eval"]
+            } else if (strat == "smc") {
+                headers = ["Path", "Task", "Repetition", "Steps", "Particles", "Time", "EvalTime", "Best Posterior", "Best Likelihood", "Expr", "Eval"]
+            } else {
+                throw "unknown strat: " + strat
+            }
+            for (const header of headers) {
+                header_row.append('th').text(header)
+            }
+            const viz_html = {
+                "smc": "smc.html",
+                "mcmc": "mcmc.html"
+            }[strat]
+
+            function null_to_neginf(x) {
+                return x === null ? -Infinity : x
+            }
+            function assert(condition, message = "assertion failed") {
+                if (!condition) {
+                    throw new Error(message)
+                }
+            }
+
+
+            let num_tasks = data.init_stubs_of_task.length
+            let num_repetitions = data.init_stubs_of_task[0].length
+            let num_train = data.init_stubs_of_task[0][0].task.num_train
+            let num_test = data.init_stubs_of_task[0][0].task.ios.length - num_train
+
+
+            let done_tasks = []
+            for (let t = 0; t < data.init_stubs_of_task.length; t++) {
+                done_tasks.push({
+                    t: t,
+                    task: data.init_stubs_of_task[t][0].task,
+                    task_info: data.task_info[t]
+                })
+            }
+
+            for (let t = 0; t < data.init_stubs_of_task.length; t++) {
+                for (let r = 0; r < data.init_stubs_of_task[t].length; r++) {
+                    let init_stub = data.init_stubs_of_task[t][r]
+                    init_stub.task.dtask = done_tasks[t]
+                }
+            }
+
+
+
+
+
+            // populate the ground truth log likelihoods
+            // let missing_lls = []
+            // for (let dtask of done_tasks) {
+            //     let t = dtask.t
+            //     dtask.gt_train_lls = []
+            //     dtask.gt_test_lls = []
+            //     dtask.train_hit_limit = false
+            //     dtask.test_hit_limit = false
+            // let task = jsons[0].init_stubs_of_task[t][0].task
+
+            function isapprox(a, b, slack = 1e-3) {
+                if (a == -Infinity && b == -Infinity)
+                    return true
+                return Math.abs(a - b) < slack
+            }
+
+            // fill in null loglikelihoods with -Infinity, since JSON can't serialize -Infinity
+            // also map hit_limit to -Infinity
+            if (done_tasks[0].task_info && done_tasks[0].task_info.res)  {
+                for (let dtask of done_tasks) {
+                    let tinfo = dtask.task_info
+                    for (let strategy of Object.keys(tinfo.res)) {
+                        let task_results = tinfo.res[strategy]
+                        for (let mode of ["train_res", "test_res"]) {
+                            task_results[mode].logweight = null_to_neginf(task_results[mode].logweight)
+                            for (let io_res of task_results[mode].ios_results) {
+                                io_res.loglikelihood = null_to_neginf(io_res.loglikelihood)
+                            }
+                        }
+                        task_results.totals = {}
+                        task_results.totals.loglikelihood = task_results.train_res.logweight + task_results.test_res.logweight
+                        task_results.totals.time = task_results.train_res.stats.time + task_results.test_res.stats.time
+                        task_results.totals.hit_limit = task_results.train_res.stats.hit_limit || task_results.test_res.stats.hit_limit
+                    }
+
+                    tinfo.train_terminating_strategy = undefined
+                    tinfo.test_terminating_strategy = undefined
+
+                    // for all strategies that did not hit the limit, make sure they agree on the loglikelihood
+                    for (let strategy of Object.keys(tinfo.res)) {
+                        if (strategy == "smc")
+                            continue // approximate inference
+                        let task_results = tinfo.res[strategy]
+                        for (let mode of ["train", "test"]) {
+                            let mode_res = mode + "_res"
+                            let mode_strategy = mode + "_terminating_strategy"
+                            let existing_strategy = tinfo[mode_strategy]
+                            let new_hit_limit = task_results[mode_res].stats.hit_limit
+
+                            if (!new_hit_limit) {
+                                let new_ll = task_results[mode_res].logweight
+                                if (existing_strategy !== undefined) {
+                                    assert(isapprox(new_ll, tinfo.res[existing_strategy][mode_res].logweight), "ll mismatch: " + new_ll + " vs " + tinfo.res[existing_strategy][mode_res].logweight + " for " + mode + " of " + strategy + " vs " + existing_strategy)
+                                } else {
+                                    tinfo[mode_strategy] = strategy
+                                }
+                            }
+                        }
+                    }
+
+                    // whether the limit was hit for EVERY strategy
+                    tinfo.train_hit_limit = (tinfo.train_terminating_strategy === undefined)
+                    tinfo.test_hit_limit = (tinfo.test_terminating_strategy === undefined)
+
+                }
+            }
+
+
+            //     // Figure out ground truth log likelihoods for each task by taking them from the fuzzing results
+            //     if (dtask.task_info.res.length != num_train + num_test) {
+            //         throw new Error("task_info.res.length != num_train + num_test")
+            //     }
+            //     for (let i = 0; i < num_train + num_test; i++) {
+            //         if (dtask.train_hit_limit && i < num_train)
+            //             continue
+            //         if (dtask.test_hit_limit && i >= num_train)
+            //             continue
+
+            //         let io = dtask.task_info.res[i]
+            //         let ll = undefined;
+            //         // check if any strategy terminated on this io, and ensure if more than one did, they agree
+            //         for (let [strategy, res] of Object.entries(io)) {
+            //             if (strategy == "smc") {
+            //                 continue
+            //             }
+            //             if (res.hit_limit)
+            //                 continue
+            //             if (ll === undefined) {
+            //                 ll = null_to_neginf(res.loglikelihood)
+            //             } else if (Math.abs(ll - null_to_neginf(res.loglikelihood)) > 1e-3) {
+            //                 console.error("ll mismatch", ll, null_to_neginf(res.loglikelihood), strategy, io)
+            //             }
+            //         }
+            //         // check if no strategy terminated on this io
+            //         if (ll === undefined) {
+            //             missing_lls.push(io)
+            //             if (i < num_train) {
+            //                 dtask.train_hit_limit = true
+            //             } else {
+            //                 dtask.test_hit_limit = true
+            //             }
+            //             continue
+            //         }
+            //         // since the output was sampled from the gt program, it shouldnt be likelihood 0
+            //         if (ll == -Infinity) {
+            //             console.error("gt_ll is -Infinity", io)
+            //         }
+            //         if (i < num_train) {
+            //             dtask.gt_train_lls.push(ll)
+            //         } else {
+            //             dtask.gt_test_lls.push(ll)
+            //         }
+            //     }
+            //     assert(dtask.gt_train_lls.length == num_train || dtask.train_hit_limit)
+            //     assert(dtask.gt_test_lls.length == num_test || dtask.test_hit_limit)
+            //     dtask.gt_train_ll = dtask.train_hit_limit ? -Infinity : dtask.gt_train_lls.reduce((a, b) => a + b, 0)
+            //     dtask.gt_test_ll = dtask.test_hit_limit ? -Infinity : dtask.gt_test_lls.reduce((a, b) => a + b, 0)
+            // }
+
+
+
+
+            for (const task of tasks) {
+                const init_stubs = task.init_stubs
+                let repetition = 1
+                for (const init_stub of init_stubs) {
+                    const row = table.append('tr').style("background-color", "#EEE")
+                    for (let i = 0; i < headers.length; i++) {
+                        if (headers[i] == "Task") {
+                            if (repetition == 1) {
+                                task.td_task = row.append('td').style("background-color", "white")
+                                const task_details = task.td_task.attr("rowspan", init_stubs.length).style("vertical-align", "top").append("details")
+                                task_details.append("summary").text(task.task.name)
+                                for (const io of init_stub.task.ios) {
+                                    task_details.append("div").text(io[0] + " → " + io[1])
+                                }
+                                for (let j = 0; j < init_stubs.length; j++) {
+                                    init_stubs[j].entries["Task"] = task.td_task // all repetitions share the same task cell
+                                }
+                            }
+                            continue // skip this column
+                        }
+                        init_stub.entries[headers[i]] = row.append('td')
+                    }
+                    init_stub.entries["Path"].append("text").text(init_stub.path + " (")
+                    init_stub.entries["Path"].append("a").text("dynamic")
+                        .attr('href', shared_url_prefix + viz_html + "?path=/" + init_stub.out + "/" + init_stub.stub_path)
+                    init_stub.entries["Path"].append("text").text(") (")
+                    init_stub.entries["Path"].append("a").text("static")
+                        .attr('href', local_url_prefix + viz_html + "?path=" + init_stub.stub_path)
+                    init_stub.entries["Path"].append("text").text(") (")
+                    init_stub.entries["Path"].append("a").text("published")
+                        .attr('href', publish_url_prefix + viz_html + "?path=" + init_stub.stub_path)
+                    init_stub.entries["Path"].append("text").text(") ")
+                    init_stub.entries["Path"].append("input").attr("type", "checkbox")
+                    // init_stub.entries["Eval"].append("a").text(init_stub.evaltime_path)
+                    //     .attr('href', url_prefix + "evaltime.html" + "?path=" + init_stub.evaltime_path)
+                    // init_stub.entries["Path"].append("span").text("⬇️").attr("title", "download").style("cursor", "pointer")
+                    //     .on("click", () => {
+                    //         copy_to_clipboard(rsync_command("download", init_stub.path));
+                    //         init_stub.entries["Path"].select("span").text("✅")
+                    //     }
+                    //     )
+                    init_stub.entries["Repetition"].text(repetition)
+                    init_stub.row = row
+                    repetition += 1
+                }
+            }
+
+            function updateAll() {
+                let all_done = true
+                for (const task of tasks) {
+                    for (const init_stub of task.init_stubs) {
+                        if (!init_stub.data || !init_stub.data.done) {
+                            all_done = false
+                            try_update(init_stub)
+                        }
+                    }
+                }
+                if (all_done) {
+                    console.log("all done")
+                    if (d3.select("#notify-done").node().checked) {
+                        beepboop()
+                    }
+                    clearInterval(updateAllInterval)
+                    clearInterval(updateStatsInterval)
+                }
+                updateStats()
+            }
+            function try_update(init_stub) {
+                const prefix = window.location.host.startsWith("people.csail.mit.edu") ? "/mlbowers/proj/ctf/" : "/"
+                d3.json(prefix + init_stub.out + "/" + init_stub.stub_path, { cache: "no-store" })
+                    .then(data => {
+                        init_stub.data = data
+                        if (!init_stub.data.done) {
+                            init_stub.row.style("background-color", "#FDFD96")
+                            return
+                        }
+                        show_result(init_stub)
+                        updateStats()
+                    })
+                    .catch(error => {
+                        init_stub.row.style("background-color", "#F99")
+                        console.log(error)
+                    })
+            }
+
+            const stats_table = d3.select('#stats').append('td').classed("big", true).append('table')
+            const stats_header_row = stats_table.append('tr')
+            const stats_row = stats_table.append('tr')
+            const stats_headers = ["Pending", "Solved Tasks", "Solved Rows"]
+            const stats_entries = {}
+            for (const header of stats_headers) {
+                stats_header_row.append('th').text(header)
+                stats_entries[header] = stats_row.append('td')
+            }
+
+            const task_stats_table = d3.select('#task-stats').append('td').classed("big", true).append('table')
+            const task_stats_header_row = task_stats_table.append('tr')
+            const task_stats_row = task_stats_table.append('tr')
+            const task_stats_entries = {}
+            for (const task of tasks) {
+                task_stats_header_row.append('th').text(task.task.name)
+                task_stats_entries[task.task.name] = task_stats_row.append('td')
+            }
+            function updateStats() {
+                let pending = 0
+                let solved_row = 0
+                let solved_task = 0
+                let failed_row = 0
+                let failed_task = 0
+                let solved_of_task = {}
+                let failed_of_task = {}
+                let time_of_task = {}
+                for (const task of tasks) {
+                    let is_solved = false
+                    // console.log(task.task.name)
+                    solved_of_task[task.task.name] = 0
+                    failed_of_task[task.task.name] = 0
+                    time_of_task[task.task.name] = 0.
+                    for (const init_stub of task.init_stubs) {
+                        if (!init_stub.data || !init_stub.data.done) {
+                            pending += 1
+                        } else {
+                            let data = init_stub.data.result
+                            if (init_stub.strat == "smc")
+                                data = data[data.length - 1]
+                            if (init_stub.strat == "mcmc")
+                                data = data[0]
+                            if (data.solved) {
+                                solved_row += 1
+                                solved_of_task[task.task.name] += 1
+                                is_solved = true
+                            } else {
+                                failed_row += 1
+                                failed_of_task[task.task.name] += 1
+                            }
+                            if (data.time)
+                                time_of_task[task.task.name] += Number(data.time)
+                        }
+                    }
+                    if (is_solved) {
+                        solved_task += 1
+                    } else {
+                        failed_task += 1
+                    }
+                    let avg_time = time_of_task[task.task.name] / (solved_of_task[task.task.name] + failed_of_task[task.task.name])
+                    task_stats_entries[task.task.name].text(`${solved_of_task[task.task.name]}/${(failed_of_task[task.task.name] + solved_of_task[task.task.name])} (${(solved_of_task[task.task.name] / (solved_of_task[task.task.name] + failed_of_task[task.task.name]) * 100).toFixed(1)}%) in ${avg_time.toFixed(1)}s`)
+                }
+                stats_entries["Pending"].text(pending)
+                stats_entries["Solved Tasks"].text(`${solved_task} / ${solved_task + failed_task} (${(solved_task / (solved_task + failed_task) * 100).toFixed(1)}%)`)
+                stats_entries["Solved Rows"].text(`${solved_row} / ${solved_row + failed_row} (${(solved_row / (solved_row + failed_row) * 100).toFixed(1)}%)`)
+            }
+
+            updateAll()
+            updateStats()
+            const updateAllInterval = setInterval(updateAll, 5000)
+            const updateStatsInterval = setInterval(updateStats, 5000)
+        }
+
+
+
+        function nestSpans(expression) {
+            let result = '<div class="expression">';
+
+            for (let char of expression) {
+                if (char === '(') {
+                    result += '<span>(';
+                } else if (char === ')') {
+                    result += ')</span>';
+                } else {
+                    result += char;
+                }
+            }
+
+            return result + "</div>";
+        }
+        function show_result(init_stub) {
+            console.log(init_stub.data)
+            let data = init_stub.data.result
+            const entries = init_stub.entries
+            const row = init_stub.row
+
+            row.style("background-color", "white")
+
+            if (init_stub.strat == "smc") {
+                data = data[data.length - 1]
+                // console.log(data)
+                const steps = data.last == undefined ? data.steps : data.last.step
+                entries["Steps"].text(steps)
+                const num_particles = data.last == undefined ? data.num_particles : data.last.particles.length
+                entries["Particles"].text(num_particles)
+                if (data.time) {
+                    entries["Time"].text(data.time.toFixed(2) + "s")
+                    entries["EvalTime"].text((data.evaltime / data.time * 100).toFixed(0) + "%" + " (" + data.unique_constrains + ")")
+                }
+                entries["Best Likelihood"].text(show_prob(data.best_likelihood))
+                entries["Best Posterior"].text(show_prob(data.best_posterior))
+                // Put the expression in as a bunch of spans.
+                entries["Expr"].html(nestSpans(data.best_likelihood_expr))
+                // Add a mouseover listener to the expression entry.
+                entries["Expr"].selectAll("div").on("mouseover", function (event) {
+                    if (event.target.tagName === 'SPAN') {
+                        const span = event.target;
+                        span.classList.add('highlighted');
+                        event.stopPropagation();
+                    }
+                }).on("mouseout", function (event) {
+                    if (event.target.tagName === 'SPAN') {
+                        const span = event.target;
+                        span.classList.remove('highlighted');
+                        event.stopPropagation();
+                    }
+                });
+                // Add a click listener to the expression entry.
+                entries["Expr"].selectAll("div").on("click", function (event) {
+                    if (event.target.tagName === 'SPAN') {
+                        const span = event.target;
+                        if (span.dataset.toggled === 'true') {
+                            span.innerHTML = span.dataset.originalContent;
+                            span.dataset.toggled = 'false';
+                        } else {
+                            span.dataset.originalContent = span.innerHTML;
+                            span.innerHTML = "...";
+                            span.dataset.toggled = 'true';
+                        }
+                    }
+                });
+
+                if (data.solved)
+                    row.style('background-color', 'lightgreen')
+                return
+            }
+
+            if (init_stub.strat == "mcmc") {
+                if (data.length > 1)
+                    throw "must be only one mcmc result"
+                data = data[0]
+                entries["Steps"].text(data.num_steps)
+                if (data.time) {
+                    entries["Time"].text(data.time.toFixed(2) + "s")
+                    entries["EvalTime"].text((data.evaltime / data.time * 100).toFixed(0) + "%" + " (" + data.unique_constrains + ")")
+                }
+                entries["Accepted & ΔLL"].text(data.num_accepted)
+
+                // console.log(data)
+
+                let logweight = data.state_log.at(-1).quick_train_res.logweight
+                let likelihood = Math.exp(logweight)
+                // let likelihood_T = Math.exp(logweight*T) // undo the temperature effect
+                entries["Likelihood"].text(show_prob(likelihood) + " (with temp)")
+
+                let gt_likelihood = 1.
+                if (init_stub.task.dtask && init_stub.task.dtask.task_info) {
+                    let tinfo = init_stub.task.dtask.task_info
+                    let strategy = tinfo.train_terminating_strategy
+                    // .res[strategy][test ? 'test_res' : 'train_res']
+                    // .logweight - ll(dtask, j, r, step, test) < slack
+                    // console.log(tinfo)
+                    gt_likelihood = tinfo.train_terminating_strategy === undefined ? 0. : Math.exp(tinfo.res[strategy].train_res.logweight)
+                }
+
+                // let gt_likelihood = Math.exp(init_stub.task.dtask.task_info.gt_train_ll)
+                entries["GT Likelihood"].text(show_prob(gt_likelihood))
+
+                if (gt_likelihood < data.likelihood * 1.00001 && gt_likelihood > 0.)
+                    row.style('background-color', 'lightgreen')
+
+                if (init_stub.task.solution)
+                entries["GT Expr"].html(nestSpans(init_stub.task.solution))
+
+                // console.log(init_stub.task)
+                entries["Posterior"].text(show_prob(data.posterior))
+                // Put the expression in as a bunch of spans.
+                entries["Expr"].html(nestSpans(data.current))
+                // Add a mouseover listener to the expression entry.
+                entries["Expr"].selectAll("div").on("mouseover", function (event) {
+                    if (event.target.tagName === 'SPAN') {
+                        const span = event.target;
+                        span.classList.add('highlighted');
+                        event.stopPropagation();
+                    }
+                }).on("mouseout", function (event) {
+                    if (event.target.tagName === 'SPAN') {
+                        const span = event.target;
+                        span.classList.remove('highlighted');
+                        event.stopPropagation();
+                    }
+                });
+                // Add a click listener to the expression entry.
+                entries["Expr"].selectAll("div").on("click", function (event) {
+                    if (event.target.tagName === 'SPAN') {
+                        const span = event.target;
+                        if (span.dataset.toggled === 'true') {
+                            span.innerHTML = span.dataset.originalContent;
+                            span.dataset.toggled = 'false';
+                        } else {
+                            span.dataset.originalContent = span.innerHTML;
+                            span.innerHTML = "...";
+                            span.dataset.toggled = 'true';
+                        }
+                    }
+                });
+
+                if (data.solved)
+                    row.style('background-color', 'lightgreen')
+                return
+            }
+
+
+
+            // entries["Expanded"].text(data.expanded)
+            // entries["Evaluated"].text(data.evaluated)
+            // entries["Nonterm Evals"].text(data.nonterminating_evals + "%")
+            // entries["Eval Time"].text(data.eval_time.toFixed(2) + "s")
+            // entries["Nonterm Eval Time"].text(data.nonterminating_eval_time + "%")
+            // entries["Best Likelihood"].text(show_prob(data.best_likelihood))
+            // entries["Best Posterior"].text(show_prob(data.best_posterior))
+            // if (data.best_likelihood == 1)
+            //     row.style('background-color', 'lightgreen')
+            // if (data.best_likelihood == 0)
+            //     row.style('background-color', 'pink')
+        }
+
+        function show_prob(prob, digits = 0) {
+            if (prob == 0)
+                return "0"
+            if (prob == 1)
+                return "1"
+            if (prob >= 1e-2)
+                return prob.toFixed(2)
+            return prob.toExponential(digits)
+        }
+
+    </script>
+
+</body>
+
+</html>

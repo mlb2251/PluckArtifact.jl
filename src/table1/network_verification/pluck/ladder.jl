@@ -12,7 +12,12 @@ function ladder_defs()
     """
 
     @define "run_ladder_network" """
-    (lambda m -> (case ((Y (lambda run_ladder_network n -> (case n of O => (Cons true false) | S m => (case (run_ladder_network m) of Cons i1 i2 => (ladder_network i1 i2))))) m) of Cons i1 i2 => i1))
+    (lambda m ->
+        (case ((Y (lambda run_ladder_network n ->
+            (case n of O => (Cons true false) | 
+                       S m => (case (run_ladder_network m) of Cons i1 i2 => (ladder_network i1 i2))))) m)
+        of Cons i1 i2 => i1)
+    )
     """
 end
 

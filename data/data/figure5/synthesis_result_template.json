@@ -1,0 +1,88 @@
+{
+    "groups": [
+        {
+            "config": {
+                "task": "all",
+                "yticks": [0, 100, 200, 300, 400, 500, 600, 700],
+                "ymax": 700,
+                "title": "Evaluation on Randomly Generated Programs",
+                "height": 300,
+                "perp1": {
+                    "title": "Synthesis Tasks Within 10% of Ground Truth Inverse Perplexity"
+                },
+                "perp2": {
+                    "title": "Average Inverse Perplexity During Synthesis",
+                    "ymin": 0.15,
+                    "ymax": 0.45,
+                    "yticks": [0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45],
+                    "legend_y": 170
+                }
+            },
+            "subgroups": [
+                "cIID-Gen",
+                "cIID-IO",
+                "Markov-Gen",
+                "Markov-IO",
+                "HMM-Gen",
+                "HMM-Gen-IO"
+            ]
+        },
+        {
+            "config": {
+                "task": "cIID-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-10/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/04-14-52/results.json",
+            "runs": [
+            ]
+        },
+        {
+            "config": {
+                "task": "cIID-IO"
+            },
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/14-45-33/results.json",
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/14-36-57/dataset.json",
+            "runs": [
+            ]
+        },
+        {
+            "config": {
+                "task": "Markov-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-20/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/13-12-32/results.json",
+            "runs": [
+            ]
+        },
+        {
+            "config": {
+                "task": "Markov-IO"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/14-37-19/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/15-41-10/results.json",
+            "runs": [
+                
+            ]
+        },
+        {
+            "config": {
+                "task": "HMM-Gen"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-13/04-07-50/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-13/13-51-45/results.json",
+            "runs": [
+
+            ]
+        },
+        {
+            "config": {
+                "task": "HMM-Gen-IO"
+            },
+            "gen_file": "data/figure5/out/fuzz-datasets/2024-11-14/13-34-18/dataset.json",
+            "eval_file": "data/figure5/out/fuzzing-evaluation/2024-11-14/13-45-02/results.json",
+            "runs": [
+                
+            ]
+        }
+    ]
+}

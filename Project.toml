@@ -25,7 +25,7 @@ Pluck = {path = "Pluck.jl"}
 [compat]
 BenchmarkTools = "1.6.0"
 CUDD = "0.3.0"
-DataStructures = "0.18.20"
+DataStructures = "0.18.22"
 Dice = "0.1.0"
 JSON = "0.21.4"
 JuliaFormatter = "1.0.62"

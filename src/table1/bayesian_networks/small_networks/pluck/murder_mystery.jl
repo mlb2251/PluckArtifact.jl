@@ -24,4 +24,4 @@ murder_mystery_example = """
       (given obs aliceDunnit))
 """
 
-add_benchmark!("murder_mystery", "pluck_default", PluckBenchmark(murder_mystery_example; kwargs=Dict(:normalize => true)))
+add_benchmark!("murder_mystery", "pluck_default", PluckBenchmark(murder_mystery_example; normalize=true))
