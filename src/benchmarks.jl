@@ -124,7 +124,7 @@ function do_timing(fn_to_time; fast=false)
     tstart = time()
     if fast
         timing1 = (@elapsed (res = fn_to_time())) * 1000;
-        println("timing done: $timing1")
+        # println("timing done: $timing1")
         if timing1 > 20000
             println("Time: $(timing1/1000) s")
             total_time = time() - tstart
