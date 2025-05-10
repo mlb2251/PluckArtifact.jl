@@ -1,4 +1,4 @@
 [submodule "PluckSynthesis.jl"]
 	path = PluckSynthesis.jl
 	url = https://github.com/mlb2251/Pluck.jl.git
-	branch = pluck-artifact-synthesis
+	branch = inner-simplify-for-merge
