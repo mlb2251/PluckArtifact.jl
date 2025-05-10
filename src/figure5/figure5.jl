@@ -343,7 +343,11 @@ function build_figure5_left()
 
         group["eval_file"] = merged
         for mode in all_modes[2:end]
-            eval_file = open("data_to_plot/figure5-left/$(mode)/$(task).json") do f
+            path = "data_to_plot/figure5-left/$(mode)/$(task).json"
+            if !isfile(path)
+                continue
+            end
+            eval_file = open(path) do f
                 JSON.parse(f)["eval_file"]
             end
             to_add = open(eval_file) do f
