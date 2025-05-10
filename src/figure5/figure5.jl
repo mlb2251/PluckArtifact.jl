@@ -308,6 +308,9 @@ function build_figure5_right()
         @assert isempty(group["runs"])
         for mode in all_modes
             path = "data_to_plot/figure5-right/$(mode)/$(task).json"
+            if !isfile(path)
+                continue
+            end
             res = open(path) do f
                 JSON.parse(f)
             end
