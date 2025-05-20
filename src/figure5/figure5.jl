@@ -84,12 +84,12 @@ function solve_tasks(config::GroupConfig)
             showerror(stdout, e)
             println()
             println()
-            Pluck.SINGLE_THREAD && rethrow()
+            SINGLE_THREAD && rethrow()
             e isa InterruptException && rethrow()
         end
     end
 
-    if !Pluck.SINGLE_THREAD && config.config isa MCMCConfig
+    if SINGLE_THREAD && config.config isa MCMCConfig
         Threads.@threads :greedy for idx__i_j in progress
             process(idx__i_j[1], idx__i_j[2])
         end
@@ -528,9 +528,10 @@ function full_evaluate_solution(expr, task)
     max_depth = 1000
     state_vars = StateVars(; fuel=autofuel(task))
     configs = [
-        BDDEvalStateConfig(; time_limit, max_depth, state_vars),
-        DiceConfig(; time_limit, max_depth, state_vars),
-        LazyEnumeratorConfig(; time_limit, max_depth, state_vars),
+        # BDDEvalStateConfig(; time_limit, max_depth, state_vars),
+        LazyKCConfig(; time_limit, max_depth, state_vars),
+        # DiceConfig(; time_limit, max_depth, state_vars),
+        # LazyEnumeratorConfig(; time_limit, max_depth, state_vars),
     ]
     train_res = test_res = nothing
     for config in configs

@@ -161,7 +161,7 @@ function solve_task(
     time_in_eval = 0.
     start = isnothing(config.start) ? pcfg.start_expr_of_type[return_type(task.type)] : parse_expr(config.start)
 
-    current = parsed_expr(pcfg, copy(start), return_type(task.type), arg_types(task.type))
+    current = parsed_expr(pcfg, copy(start), return_type(task.type), arg_types(task.type), [:xs])
     
     logprior_curr = logprob(pcfg_dist, pcfg, current)
     task_constrain_fn = config.eval_builder(task)
@@ -256,4 +256,30 @@ function solve_task(
     res = [MCMCResult(config, current.expr.child, task_res_curr, exp(loglikelihood_curr), exp(logprior_curr), exp(loglikelihood_curr + logprior_curr), samples, task_constrain_fn, solved, time() - tstart, total_time(task_constrain_fn),  history, i, length(task_constrain_fn.cache), tdd, state_log)]
     empty!(task_constrain_fn.cache) # to be safe
     return res
+end
+
+
+
+struct RenderedHole <: Pluck.Head
+    prefix::String
+    suffix::String
+end
+
+function Base.show(io::IO, e::PExpr{RenderedHole})
+    print(io, e.head.prefix)
+    print(io, e.args[1])
+    print(io, e.head.suffix)
+end
+
+function highlight_subexpression(expr, path, prefix, suffix)
+
+    if isempty(path)
+        return string(PExpr(RenderedHole(prefix, suffix), [expr]))
+    else
+        expr = copy(expr)
+        child_at_path = getchild(expr, path)
+        setchild!(expr, path, PExpr(RenderedHole(prefix, suffix), [child_at_path]))
+        return string(expr)
+    end
+
 end

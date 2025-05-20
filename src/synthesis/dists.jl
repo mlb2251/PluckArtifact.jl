@@ -136,7 +136,7 @@ function logprob(::PCFGDist, pcfg::Grammar, e::GExpr)::Float64
 
     # recursive logprob call on children
     for (i, (sym, path)) in enumerate(e.rhs.symbol_paths)
-        @assert e.children[i].lhs == getchild(e.rhs.expr, path).name == sym
+        @assert e.children[i].lhs == getchild(e.rhs.expr, path).head.name == sym
         logprob_ += logprob(pcfg_dist, pcfg, e.children[i])
     end
 

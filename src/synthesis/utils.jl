@@ -132,3 +132,12 @@ round3(x) = round(x; sigdigits = 3)
 round2(x) = round(x; sigdigits = 2)
 round1(x) = round(x; sigdigits = 1)
 round0(x) = round(x; sigdigits = 0)
+
+
+SINGLE_THREAD::Bool = false
+
+function nothreads(value=!SINGLE_THREAD)
+    global SINGLE_THREAD = value
+    println("SINGLE_THREAD = $SINGLE_THREAD")
+    SINGLE_THREAD
+end

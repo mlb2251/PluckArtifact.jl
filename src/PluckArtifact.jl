@@ -26,6 +26,7 @@ include("synthesis/dists.jl")
 include("synthesis/solutions.jl")
 include("synthesis/mcmc.jl")
 include("synthesis/bench.jl")
+include("synthesis/html.jl")
 
 include("figure5/figure5.jl")
 
