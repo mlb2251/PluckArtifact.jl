@@ -80,6 +80,13 @@ set-branch:
 	make bindings
 	make julia-instantiate
 
+COMMIT = main
+set-commit:
+	cd Pluck.jl && git checkout $(COMMIT) && git submodule update --recursive
+	make bindings
+	make julia-instantiate
+
+
 table1-clean:
 	rm -rf out/table1
 
