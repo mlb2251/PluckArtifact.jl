@@ -68,17 +68,20 @@ table-1-diff-all:
 	make table-1-diff-correctness SRC=out/table1/ours DST=out/table1/eager_enum
 
 evaluate:
-	make table-1-col COL=ours
+	make table-1-col
 	make table-1-save
 	make table-1-check 
 	make table-1-check-ours-vs-historical-dice
 	make table-1-diff
 
-evaluate-lazy:
-	make evaluate COL=lazy_enum BEFORE=out/table1_2025-04-30_22-30-59
+BRANCH = main 
+set-branch:
+	cd Pluck.jl && git checkout $(BRANCH) && git pull && git submodule update --recursive
+	make bindings
+	make julia-instantiate
 
-evaluate-eager:
-	make evaluate COL=eager_enum BEFORE=out/table1_2025-04-30_23-19-06
+table1-clean:
+	rm -rf out/table1
 
 table-1-sizes:
 	julia --project -e "using PluckArtifact; PA.table1_sizes(;which=:$(WHICH))"
