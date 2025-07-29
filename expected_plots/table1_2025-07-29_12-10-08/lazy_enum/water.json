@@ -1,0 +1,37 @@
+{
+  "timing": 621.785625,
+  "result": [
+    [
+      {
+        "type": "Value",
+        "constructor": "Option2_MG_L",
+        "args": []
+      },
+      0.004161748754297099
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Option6_MG_L",
+        "args": []
+      },
+      0.09106235327586959
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Option10_MG_L",
+        "args": []
+      },
+      2.0043995018128986e-8
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Option4_MG_L",
+        "args": []
+      },
+      0.90477587792584
+    ]
+  ]
+}

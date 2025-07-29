@@ -1,0 +1,29 @@
+{
+  "timing": "*timeout*",
+  "result": [
+    [
+      {
+        "type": "Value",
+        "constructor": "Option2",
+        "args": []
+      },
+      0.26562500001737716
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Option0",
+        "args": []
+      },
+      0.2656249999747997
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Option1",
+        "args": []
+      },
+      0.4687500000078063
+    ]
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "timing": 77.424417,
+  "result": [
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S44",
+        "args": []
+      },
+      0.09472751695144571
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S_64",
+        "args": []
+      },
+      0.0027365331229289008
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S12",
+        "args": []
+      },
+      0.0015344946621133775
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S60",
+        "args": []
+      },
+      0.03637682276538774
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S52",
+        "args": []
+      },
+      0.3541139707266835
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S56",
+        "args": []
+      },
+      0.15438224661460737
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S32",
+        "args": []
+      },
+      0.004044895489278196
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S20",
+        "args": []
+      },
+      0.0013746809661952988
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S08",
+        "args": []
+      },
+      0.0008255742377163428
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S40",
+        "args": []
+      },
+      0.034088231795036374
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S48",
+        "args": []
+      },
+      0.29201934141813285
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S28",
+        "args": []
+      },
+      0.0020968149527313216
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S16",
+        "args": []
+      },
+      0.0015667764969255586
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S00",
+        "args": []
+      },
+      0.008716364148532453
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S24",
+        "args": []
+      },
+      0.0018831614905352439
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S36",
+        "args": []
+      },
+      0.009388818407956679
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "M_S04",
+        "args": []
+      },
+      0.0001237557537930512
+    ]
+  ]
+}
