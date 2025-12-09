@@ -1,0 +1,29 @@
+{
+  "timing": 1.039833,
+  "result": [
+    [
+      {
+        "type": "Value",
+        "constructor": "train",
+        "args": []
+      },
+      0.2808572519902002
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "car",
+        "args": []
+      },
+      0.5618339760097998
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "other",
+        "args": []
+      },
+      0.15730877199999987
+    ]
+  ]
+}

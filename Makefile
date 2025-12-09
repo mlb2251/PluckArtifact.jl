@@ -22,6 +22,14 @@ evaluate:
 	make table-1-check
 	make table-1-diff
 
+# evaluate:
+# 	make table-1-col
+# 	make table-1-save
+# 	make table-1-check 
+# 	make table-1-check-ours-vs-historical-dice
+# 	make table-1-diff
+
+
 # Make a single cell
 table-1-cell:
 	julia --project -e "using PluckArtifact; PA.table1_cell(\"$(COL)\", \"$(ROW)\", force=$(FORCE))"
@@ -54,6 +62,7 @@ table-1-show:
 
 # Show the diff between actual and expected table1 results
 AFTER = out/table1
+# BEFORE = expected_plots/table1_2025-07-29_12-10-08
 BEFORE = out/table1_camera_ready_apr23
 table-1-diff:
 	julia --project -e "using PluckArtifact; PA.diff_table1(;actual_dir=\"$(AFTER)\", expected_dir=\"$(BEFORE)\", which=:$(WHICH))"
@@ -68,8 +77,8 @@ table-1-clean: table-1-save
 table-1-check:
 	julia --project -e "using PluckArtifact; PA.diff_results(\"$(AFTER)/$(COL)\", \"$(BEFORE)/$(COL)\")"
 
-table-1-check-vs-dice:
-	julia --project -e "using PluckArtifact; PA.diff_results(\"out/table1/ours\", \"out/table1/dice\")"
+table-1-check-ours-vs-historical-dice:
+	julia --project -e "using PluckArtifact; PA.diff_results(\"out/table1/ours\", \"expected_plots/table1_2025-07-29_12-10-08/dice\")"
 
 table-1-diff-correctness:
 	julia --project -e "using PluckArtifact; PA.diff_results(\"$(SRC)\", \"$(DST)\")"
@@ -82,8 +91,22 @@ table-1-diff-all:
 evaluate-lazy:
 	make evaluate COL=lazy_enum BEFORE=out/table1_2025-04-30_22-30-59
 
-evaluate-eager:
-	make evaluate COL=eager_enum BEFORE=out/table1_2025-04-30_23-19-06
+
+BRANCH = main 
+set-branch:
+	cd Pluck.jl && git checkout $(BRANCH) && git pull && git submodule update --recursive
+	make bindings
+	make julia-instantiate
+
+COMMIT = main
+set-commit:
+	cd Pluck.jl && git checkout $(COMMIT) && git submodule update --recursive
+	make bindings
+	make julia-instantiate
+
+
+table1-clean:
+	rm -rf out/table1
 
 table-1-sizes:
 	julia --project -e "using PluckArtifact; PA.table1_sizes(;which=:$(WHICH))"

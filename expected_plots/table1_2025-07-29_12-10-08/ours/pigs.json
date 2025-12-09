@@ -1,0 +1,29 @@
+{
+  "timing": 8.9015,
+  "result": [
+    [
+      {
+        "type": "Value",
+        "constructor": "Option2",
+        "args": []
+      },
+      0.2656250000173828
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Option1",
+        "args": []
+      },
+      0.4687500000078124
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Option0",
+        "args": []
+      },
+      0.2656249999748047
+    ]
+  ]
+}

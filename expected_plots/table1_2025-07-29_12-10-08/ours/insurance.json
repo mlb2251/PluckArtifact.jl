@@ -1,0 +1,37 @@
+{
+  "timing": 1750.8385,
+  "result": [
+    [
+      {
+        "type": "Value",
+        "constructor": "HundredThou",
+        "args": []
+      },
+      0.10507029426792233
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Million",
+        "args": []
+      },
+      0.01679652005010235
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "TenThou",
+        "args": []
+      },
+      0.3151875947814524
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "Thousand",
+        "args": []
+      },
+      0.5629455909005231
+    ]
+  ]
+}

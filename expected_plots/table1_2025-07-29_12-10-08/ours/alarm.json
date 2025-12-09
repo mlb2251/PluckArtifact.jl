@@ -1,0 +1,29 @@
+{
+  "timing": 631.3495,
+  "result": [
+    [
+      {
+        "type": "Value",
+        "constructor": "LOW",
+        "args": []
+      },
+      0.38999308773414654
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "HIGH",
+        "args": []
+      },
+      0.4052991497532523
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "NORMAL",
+        "args": []
+      },
+      0.20470776251260087
+    ]
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "timing": 11188.593583,
+  "result": [
+    [
+      {
+        "type": "Value",
+        "constructor": "XNIL",
+        "args": []
+      },
+      0.25206480542413834
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "SVR",
+        "args": []
+      },
+      0.3073357152543599
+    ],
+    [
+      {
+        "type": "Value",
+        "constructor": "SIG",
+        "args": []
+      },
+      0.44059947932150173
+    ]
+  ]
+}
