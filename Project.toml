@@ -1,7 +1,7 @@
 name = "PluckArtifact"
 uuid = "bd3ab88f-9656-4eeb-9a4f-9025c9d141cb"
-authors = ["Alex Lew <alexlew@mit.edu>", "Maddy Bowers <mlbowers@mit.edu>"]
 version = "0.1.0"
+authors = ["Alex Lew <alexlew@mit.edu>", "Maddy Bowers <mlbowers@mit.edu>"]
 
 [deps]
 AutoHashEquals = "15f4f7f2-30c1-5605-9d31-71845cf9641f"
@@ -23,8 +23,10 @@ Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [sources]
-Dice = {rev = "pluck-artifact", url = "https://github.com/mlb2251/Dice.jl.git"}
-Pluck = {path = "Pluck.jl"}
+CUDD = {rev = "m1compat", url = "https://github.com/rtjoa/CUDD.jl.git"}
+# Dice = {rev = "pluck-artifact", url = "https://github.com/mlb2251/Dice.jl.git"}
+Dice = {path = "/Users/maddy/proj/julia/Dice.jl"}
+Pluck = {path = "/Users/maddy/proj/julia/CoarseToFine.jl/Pluck.jl"}
 
 [compat]
 AutoHashEquals = "2.2.0"
