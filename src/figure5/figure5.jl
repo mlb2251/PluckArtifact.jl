@@ -1,6 +1,8 @@
 include("dice.jl")
 include("seq_grammars.jl")
 
+export solve_tasks, GroupConfig
+
 using JSON: JSON
 using Dates: Dates
 using ProgressBars

@@ -30,4 +30,6 @@ include("synthesis/html.jl")
 
 include("figure5/figure5.jl")
 
+include("synthesis/joshrule.jl")
+
 end

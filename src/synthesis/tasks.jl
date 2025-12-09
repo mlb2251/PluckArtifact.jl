@@ -32,9 +32,16 @@ function to_value(x::Int)
 end
 
 
-function parse_value(v)
+function parse_value(v::T) where T <: AbstractString
     return compile_deterministic(v)
 end
+
+parse_value(v) = parse_value(jl_to_value_string(v))
+
+
+# just to get around the "Any[]" at the start of a string() of a vector
+jl_to_value_string(v::Vector) = "[" * join(jl_to_value_string.(v), ", ") * "]"
+jl_to_value_string(v) = string(v)
 
 # parses from normal vectors to scheme lists
 # parse_io(inputs, output) = !adt_mode() ? IOExample([scm_list(i) for i in inputs], scm_list(output)) : IOExample([to_value(i) for i in inputs], to_value(output))
@@ -88,11 +95,11 @@ getios_default(json) =
         json["examples"]
     end
 function skip_default(json, getios)
-    for (i, o) in getios(json)
-        if out_of_range(o) || any(i -> out_of_range(i), i)
-            return true
-        end
-    end
+    # for (i, o) in getios(json)
+    #     if out_of_range(o) || any(i -> out_of_range(i), i)
+    #         return true
+    #     end
+    # end
     false
 end
 
@@ -340,9 +347,9 @@ function filter_tasks(tasks; verbose = false, N = 3)
         #     verbose && println("skipping $(task.name): no solution")
         #     return false
         # end
-        filter!(task.ios) do io
-            !out_of_range(io.output) && !any(i -> out_of_range(i), io.inputs)
-        end
+        # filter!(task.ios) do io
+        #     !out_of_range(io.output) && !any(i -> out_of_range(i), io.inputs)
+        # end
         unique!(task.ios)
         if length(task.ios) < N
             verbose && println("skipping $(task.name): not enough in-range examples")
