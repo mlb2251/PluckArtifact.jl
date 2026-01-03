@@ -81,7 +81,12 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, 
     end
 
     fn_to_time = if strategy == "ours"
-        benchmark.normalize ? () -> normalize(Pluck.wmc(Pluck.toplevel_compile(expr; cfg=LazyKCConfig(; kwargs...)))) : () -> Pluck.wmc(Pluck.toplevel_compile(expr;  cfg=LazyKCConfig(; kwargs...)))
+        function fn()
+            res = Pluck.toplevel_compile(expr; cfg=LazyKCConfig(; kwargs...))
+            weight = Pluck.wmc(res)
+            Pluck.free_state(res.state)
+            return benchmark.normalize ? normalize(weight) : weight
+        end
     elseif strategy == "smc"
         benchmark.normalize ? () -> normalize(bdd_forward_with_suspension(expr; kwargs...)) : () -> bdd_forward_with_suspension(expr; kwargs...)
     elseif strategy == "lazy_enum"
