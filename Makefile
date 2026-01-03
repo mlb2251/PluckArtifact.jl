@@ -70,7 +70,7 @@ table-1-diff:
 table-1-save:
 	cp -r out/table1 out/table1_$(shell date +%Y-%m-%d_%H-%M-%S)
 
-table-1-clean: table-1-save
+table-1-clean:
 	rm -rf out/table1
 	
 
