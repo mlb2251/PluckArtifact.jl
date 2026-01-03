@@ -97,6 +97,8 @@ function run_benchmark(benchmark::PluckBenchmark, strategy::String; fast=false, 
         error("Unknown strategy: $strategy")
     end
 
+    # return fn_to_time
+
     res, timing = do_timing(fn_to_time; fast=fast)
 
     hit_limit = res == []
