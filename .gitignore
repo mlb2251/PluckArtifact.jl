@@ -8,3 +8,4 @@ profile.pb.gz
 .clj-kondo/.cache/v1/lock
 .lsp/.cache/db.transit.json
 data/synthesis/list_function_250
+worktrees/
