@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.2"
+julia_version = "1.12.3"
 manifest_format = "2.0"
 project_hash = "bd45d3cc77ad10fccd65f53d7b2cd4df3596de7b"
 
@@ -355,7 +355,7 @@ version = "1.9.1"
 
 [[deps.Dice]]
 deps = ["BenchmarkTools", "CUDD", "DataStructures", "DirectedAcyclicGraphs", "Distributions", "Graphs", "IRTools", "Jive", "Logging", "MacroTools", "Plots", "PrecompileTools", "SymPy", "Symbolics"]
-path = "/Users/maddy/proj/julia/Dice.jl"
+git-tree-sha1 = "6447731cfbef93601b46025d045cd8bbaf85b2ca"
 repo-rev = "pluck-artifact"
 repo-url = "https://github.com/mlb2251/Dice.jl.git"
 uuid = "94eeadfc-1ba6-40b7-9ed8-dee71557d525"
@@ -1054,7 +1054,7 @@ version = "0.44.2+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "Random", "SHA", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.12.0"
+version = "1.12.1"
 weakdeps = ["REPL"]
 
     [deps.Pkg.extensions]
@@ -1095,6 +1095,8 @@ version = "1.40.10"
 [[deps.Pluck]]
 deps = ["AutoHashEquals", "DataStructures", "Dates", "FunctionalCollections", "JSON", "Libdl", "Printf", "Revise"]
 path = "/Users/maddy/proj/julia/CoarseToFine.jl/Pluck.jl"
+repo-rev = "dev"
+repo-url = "https://github.com/pluck-lang/Pluck.jl"
 uuid = "86be7f31-a170-45b4-80a2-1900336dac47"
 version = "0.1.0"
 

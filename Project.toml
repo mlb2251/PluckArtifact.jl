@@ -23,10 +23,9 @@ Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [sources]
-CUDD = {rev = "m1compat", url = "https://github.com/rtjoa/CUDD.jl.git"}
-# Dice = {rev = "pluck-artifact", url = "https://github.com/mlb2251/Dice.jl.git"}
-Dice = {path = "/Users/maddy/proj/julia/Dice.jl"}
-Pluck = {path = "/Users/maddy/proj/julia/CoarseToFine.jl/Pluck.jl"}
+Dice = {rev = "pluck-artifact", url = "https://github.com/mlb2251/Dice.jl.git"}
+Pluck = {rev = "dev", url = "https://github.com/pluck-lang/Pluck.jl"}
+# Pluck = {path = "/Users/maddy/proj/julia/CoarseToFine.jl/Pluck.jl"}
 
 [compat]
 AutoHashEquals = "2.2.0"
